@@ -1,3 +1,40 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-background",
+      "description": "A bright and modern clinic reception area",
+      "imageUrl": "https://picsum.photos/seed/hero/1920/1080",
+      "imageHint": "clinic reception"
+    },
+    {
+      "id": "doctor-smiling",
+      "description": "A friendly female doctor smiling",
+      "imageUrl": "https://picsum.photos/seed/doctor/600/800",
+      "imageHint": "doctor smiling"
+    },
+    {
+      "id": "patient-on-tablet",
+      "description": "A patient using a tablet to talk to a doctor",
+      "imageUrl": "https://picsum.photos/seed/telehealth/800/600",
+      "imageHint": "telehealth patient"
+    },
+    {
+      "id": "avatar-1",
+      "description": "Avatar of a user",
+      "imageUrl": "https://picsum.photos/seed/avatar1/100/100",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "avatar-2",
+      "description": "Avatar of another user",
+      "imageUrl": "https://picsum.photos/seed/avatar2/100/100",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "avatar-3",
+      "description": "Avatar of a third user",
+      "imageUrl": "https://picsum.photos/seed/avatar3/100/100",
+      "imageHint": "man portrait"
+    }
+  ]
 }

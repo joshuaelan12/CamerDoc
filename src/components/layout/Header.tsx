@@ -1,0 +1,117 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import { Logo } from "../icons/Logo";
+
+const navLinks = [
+  { href: "#home", label: "Home" },
+  { href: "#about", label: "About" },
+  { href: "#how-it-works", label: "How It Works" },
+  { href: "#contact", label: "Contact Us" },
+  { href: "#faq", label: "FAQ" },
+];
+
+export default function Header() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <header
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        isScrolled ? "bg-card/80 backdrop-blur-sm shadow-md" : "bg-transparent"
+      )}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-20">
+          <Link href="/">
+            <Logo className={cn(isScrolled ? "text-foreground" : "text-white")} />
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  isScrolled ? "text-foreground" : "text-white"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="hidden md:flex items-center gap-2">
+            <Button variant="ghost" asChild className={cn(isScrolled ? "text-foreground hover:text-primary": "text-white hover:bg-white/10 hover:text-white")}>
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/signup">Sign Up</Link>
+            </Button>
+          </div>
+
+          <div className="md:hidden">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className={cn(isScrolled ? "text-foreground" : "text-white hover:bg-white/10")}>
+                  <Menu />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[80vw]">
+                <div className="flex flex-col h-full">
+                  <div className="flex justify-between items-center mb-8">
+                     <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Logo className="text-foreground" />
+                      </Link>
+                     <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
+                        <X />
+                        <span className="sr-only">Close menu</span>
+                     </Button>
+                  </div>
+                  <nav className="flex flex-col gap-6 text-lg">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="font-medium text-foreground hover:text-primary transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </nav>
+                  <div className="mt-auto pt-6 border-t">
+                    <div className="flex flex-col gap-4">
+                       <Button variant="outline" asChild>
+                        <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+                      </Button>
+                      <Button asChild>
+                        <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
