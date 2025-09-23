@@ -50,8 +50,8 @@ export default function PatientHistoryPage() {
 
   useEffect(() => {
     if (!userData) {
-        setLoading(false);
-        return;
+      setLoading(false);
+      return;
     }
 
     setLoading(true);
@@ -59,17 +59,16 @@ export default function PatientHistoryPage() {
     let checksLoaded = false;
 
     const checkLoading = () => {
-        if (appointmentsLoaded && checksLoaded) {
-            setLoading(false);
-        }
+      if (appointmentsLoaded && checksLoaded) {
+        setLoading(false);
+      }
     };
     
     // Fetch past appointments
     const appointmentsQuery = query(
       collection(db, "appointments"),
       where("patientId", "==", userData.uid),
-      where("startTime", "<", new Date()),
-      orderBy("startTime", "desc")
+      where("startTime", "<", new Date())
     );
 
     const unsubAppointments = onSnapshot(appointmentsQuery, async (snapshot) => {
@@ -86,9 +85,14 @@ export default function PatientHistoryPage() {
         return { ...appointmentData, doctor: doctorData };
       });
       const resolvedAppointments = await Promise.all(appointmentsPromises);
+      resolvedAppointments.sort((a, b) => b.startTime.toMillis() - a.startTime.toMillis());
       setPastAppointments(resolvedAppointments);
       appointmentsLoaded = true;
       checkLoading();
+    }, () => {
+        // Handle error case for this listener
+        appointmentsLoaded = true;
+        checkLoading();
     });
 
     // Fetch symptom checks
@@ -100,6 +104,10 @@ export default function PatientHistoryPage() {
         const checks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SymptomCheck));
         checks.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
         setSymptomChecks(checks);
+        checksLoaded = true;
+        checkLoading();
+    }, () => {
+        // Handle error case for this listener
         checksLoaded = true;
         checkLoading();
     });
