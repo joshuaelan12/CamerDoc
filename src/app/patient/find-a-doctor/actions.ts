@@ -13,7 +13,30 @@ export async function createAppointment(
   try {
     // Use a transaction to ensure atomicity
     await runTransaction(db, async (transaction) => {
-      // 1. Create a new appointment document
+      // 1. READ from the doctor's availability first.
+      const availabilityDate = new Date(slot.startTime);
+      availabilityDate.setUTCHours(0, 0, 0, 0); // Normalize to the start of the day in UTC
+      const availabilityDocId = `${doctorId}_${availabilityDate.toISOString().split("T")[0]}`;
+      const availabilityRef = doc(db, "availabilities", availabilityDocId);
+
+      const availabilityDoc = await transaction.get(availabilityRef);
+      if (!availabilityDoc.exists()) {
+        throw new Error("Doctor's availability not found for the selected date.");
+      }
+
+      // 2. PREPARE the writes.
+      const currentSlots = availabilityDoc.data().timeSlots || [];
+      const isSlotAvailable = currentSlots.some(
+        (s: { startTime: string }) => s.startTime === slot.startTime
+      );
+
+      if (!isSlotAvailable) {
+        throw new Error("The selected time slot is no longer available.");
+      }
+
+      // 3. PERFORM all writes after all reads are complete.
+      
+      // Create the new appointment document
       const appointmentRef = doc(collection(db, "appointments"));
       transaction.set(appointmentRef, {
         doctorId,
@@ -24,22 +47,10 @@ export async function createAppointment(
         createdAt: serverTimestamp(),
       });
 
-      // 2. Update the doctor's availability
-      const availabilityDate = new Date(slot.startTime);
-      availabilityDate.setUTCHours(0, 0, 0, 0); // Normalize to the start of the day in UTC
-      const availabilityDocId = `${doctorId}_${availabilityDate.toISOString().split("T")[0]}`;
-      const availabilityRef = doc(db, "availabilities", availabilityDocId);
-
-      const availabilityDoc = await transaction.get(availabilityRef);
-      if (!availabilityDoc.exists()) {
-        throw new Error("Doctor's availability not found.");
-      }
-
-      const currentSlots = availabilityDoc.data().timeSlots || [];
+      // Update the doctor's availability by removing the booked slot
       const updatedSlots = currentSlots.filter(
         (s: { startTime: string; endTime: string }) => s.startTime !== slot.startTime
       );
-
       transaction.update(availabilityRef, { timeSlots: updatedSlots });
     });
 
