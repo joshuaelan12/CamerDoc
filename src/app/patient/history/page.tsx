@@ -49,7 +49,10 @@ export default function PatientHistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userData) return;
+    if (!userData) {
+        setLoading(false);
+        return;
+    }
 
     setLoading(true);
     let appointmentsLoaded = false;
@@ -95,13 +98,11 @@ export default function PatientHistoryPage() {
     );
     const unsubChecks = onSnapshot(checksQuery, (snapshot) => {
         const checks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SymptomCheck));
-        // Sort on the client side
         checks.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
         setSymptomChecks(checks);
         checksLoaded = true;
         checkLoading();
     });
-
 
     return () => {
       unsubAppointments();
