@@ -18,9 +18,9 @@ export interface UserData {
   specialization?: string;
   hospitalAffiliation?: string;
   verificationStatus?: 'pending' | 'approved' | 'rejected';
+  phone?: string;
   // Patient specific
   dateOfBirth?: any; // Allow for serverTimestamp
   gender?: string;
   location?: string;
-  phone?: string;
 }

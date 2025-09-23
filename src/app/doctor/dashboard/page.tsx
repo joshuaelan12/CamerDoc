@@ -15,11 +15,13 @@ import {
   XCircle,
   Building,
   Stethoscope,
+  CalendarClock,
 } from "lucide-react";
 
 const navItems: NavItem[] = [
   { href: "/doctor/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/doctor/appointments", label: "Appointments", icon: Calendar, match: "/doctor/appointments" },
+  { href: "/doctor/availability", label: "Availability", icon: CalendarClock, match: "/doctor/availability" },
   { href: "/doctor/patients", label: "Patients", icon: Users, match: "/doctor/patients" },
   { href: "/doctor/messages", label: "Messages", icon: MessageSquare, match: "/doctor/messages" },
 ];
