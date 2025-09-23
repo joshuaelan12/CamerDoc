@@ -20,6 +20,7 @@ interface UserData {
   email: string;
   role: "patient" | "doctor" | "admin";
   createdAt: Date;
+  verificationStatus?: 'pending' | 'approved' | 'rejected';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

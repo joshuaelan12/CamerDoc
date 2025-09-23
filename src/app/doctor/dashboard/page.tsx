@@ -1,13 +1,17 @@
+
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { NavItem } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Calendar,
   LayoutDashboard,
   MessageSquare,
   Users,
+  Hourglass
 } from "lucide-react";
 
 const navItems: NavItem[] = [
@@ -18,8 +22,20 @@ const navItems: NavItem[] = [
 ];
 
 export default function DoctorDashboardPage() {
+  const { userData } = useAuth();
+  const isPendingVerification = userData?.verificationStatus === 'pending';
+
   return (
     <DashboardLayout navItems={navItems} userName="Dr. John Smith" userRole="Doctor">
+      {isPendingVerification && (
+        <Alert className="mb-4 bg-yellow-50 border-yellow-200 text-yellow-800 [&>svg]:text-yellow-600">
+          <Hourglass className="h-4 w-4" />
+          <AlertTitle>Verification Pending</AlertTitle>
+          <AlertDescription>
+            Your account is currently under review by an administrator. You will be notified once your verification is complete.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

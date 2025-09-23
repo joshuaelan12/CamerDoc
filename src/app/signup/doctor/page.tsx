@@ -14,14 +14,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/icons/Logo";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, FileUp } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required." }),
   email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-  specialization: z.string().min(2, { message: "Specialization is required." }),
+  specialization: z.string({ required_error: "Specialization is required." }),
+  hospitalAffiliation: z.string().optional(),
+  phone: z.string().min(10, { message: "A valid phone number is required." }),
 });
 
 export default function DoctorSignupPage() {
@@ -35,6 +39,8 @@ export default function DoctorSignupPage() {
       email: "",
       password: "",
       specialization: "",
+      hospitalAffiliation: "",
+      phone: "",
     },
   });
 
@@ -43,7 +49,7 @@ export default function DoctorSignupPage() {
     if (result.success) {
       toast({
         title: "Account Created",
-        description: "Your doctor account has been successfully created.",
+        description: "Your doctor account has been successfully created. Please wait for admin approval.",
       });
       router.push("/doctor/dashboard");
     } else {
@@ -74,7 +80,7 @@ export default function DoctorSignupPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                  <FormField
                   control={form.control}
                   name="fullName"
@@ -120,13 +126,59 @@ export default function DoctorSignupPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Specialization</FormLabel>
+                       <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a specialization" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="General Practice">General Practice</SelectItem>
+                          <SelectItem value="Pediatrics">Pediatrics</SelectItem>
+                          <SelectItem value="Cardiology">Cardiology</SelectItem>
+                          <SelectItem value="Dermatology">Dermatology</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Cardiology, Pediatrics" {...field} />
+                        <Input type="tel" placeholder="(123) 456-7890" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  control={form.control}
+                  name="hospitalAffiliation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hospital/Clinic Affiliation (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., General Hospital" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormItem>
+                  <FormLabel>License/Certificate</FormLabel>
+                  <FormControl>
+                    <Button variant="outline" className="w-full justify-start font-normal" disabled>
+                      <FileUp className="mr-2 h-4 w-4" />
+                      Upload File (Coming Soon)
+                    </Button>
+                  </FormControl>
+                   <FormMessage />
+                </FormItem>
                 <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                    {form.formState.isSubmitting ? (
                       <>

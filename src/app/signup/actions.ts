@@ -12,6 +12,7 @@ const signupSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["patient", "doctor"]),
   specialization: z.string().optional(),
+  hospitalAffiliation: z.string().optional(),
   dateOfBirth: z.date().optional(),
   gender: z.string().optional(),
   location: z.string().optional(),
@@ -36,7 +37,7 @@ export async function createUser(values: SignupInput): Promise<FormState> {
     };
   }
 
-  const { fullName, email, password, role, specialization, dateOfBirth, gender, location, phone } = validatedFields.data;
+  const { fullName, email, password, role, specialization, hospitalAffiliation, dateOfBirth, gender, location, phone } = validatedFields.data;
 
   try {
     // Create user in Firebase Authentication
@@ -51,8 +52,11 @@ export async function createUser(values: SignupInput): Promise<FormState> {
       createdAt: serverTimestamp(),
     };
 
-    if (role === 'doctor' && specialization) {
+    if (role === 'doctor') {
       userData.specialization = specialization;
+      userData.hospitalAffiliation = hospitalAffiliation || "";
+      userData.phone = phone;
+      userData.verificationStatus = 'pending';
     }
 
     if (role === 'patient') {
