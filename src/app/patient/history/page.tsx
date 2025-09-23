@@ -19,6 +19,7 @@ import {
   Loader2,
   FileClock,
   User,
+  Newspaper,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,6 +28,7 @@ const navItems: NavItem[] = [
   { href: "/patient/find-a-doctor", label: "Find a Doctor", icon: Stethoscope, match: "/patient/find-a-doctor" },
   { href: "/patient/appointments", label: "Appointments", icon: Calendar, match: "/patient/appointments" },
   { href: "/patient/history", label: "Medical History", icon: ScrollText, match: "/patient/history" },
+  { href: "/patient/news", label: "News & Updates", icon: Newspaper, match: "/patient/news" },
   { href: "/patient/profile", label: "Profile", icon: User, match: "/patient/profile" },
   { href: "/patient/messages", label: "Messages", icon: MessageSquare, match: "/patient/messages" },
   { href: "/symptom-checker", label: "Symptom Checker", icon: HeartPulse },
@@ -87,8 +89,7 @@ export default function PatientHistoryPage() {
         return { ...appointmentData, doctor: doctorData };
       });
       const resolvedAppointments = await Promise.all(appointmentsPromises);
-      resolvedAppointments.sort((a, b) => b.startTime.toMillis() - a.startTime.toMillis());
-      setPastAppointments(resolvedAppointments);
+      setPastAppointments(resolvedAppointments.sort((a,b) => b.startTime.toMillis() - a.startTime.toMillis()));
       appointmentsLoaded = true;
       checkLoading();
     }, () => {
@@ -104,8 +105,7 @@ export default function PatientHistoryPage() {
     );
     const unsubChecks = onSnapshot(checksQuery, (snapshot) => {
         const checks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SymptomCheck));
-        checks.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-        setSymptomChecks(checks);
+        setSymptomChecks(checks.sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()));
         checksLoaded = true;
         checkLoading();
     }, () => {

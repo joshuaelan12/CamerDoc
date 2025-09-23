@@ -12,6 +12,7 @@ import {
   Users,
   CalendarClock,
   User,
+  Newspaper,
 } from "lucide-react";
 
 const navItems: NavItem[] = [
@@ -19,6 +20,7 @@ const navItems: NavItem[] = [
   { href: "/doctor/appointments", label: "Appointments", icon: Calendar, match: "/doctor/appointments" },
   { href: "/doctor/availability", label: "Availability", icon: CalendarClock, match: "/doctor/availability" },
   { href: "/doctor/patients", label: "Patients", icon: Users, match: "/doctor/patients" },
+  { href: "/doctor/news", label: "News & Updates", icon: Newspaper, match: "/doctor/news" },
   { href: "/doctor/profile", label: "Profile", icon: User, match: "/doctor/profile" },
   { href: "/doctor/messages", label: "Messages", icon: MessageSquare, match: "/doctor/messages" },
 ];
@@ -40,3 +42,5 @@ export default function DoctorPatientsPage() {
     </DashboardLayout>
   );
 }
+
+    

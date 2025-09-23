@@ -20,12 +20,13 @@ import {
   Send,
   Loader2,
   User,
+  Newspaper,
 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { getConversations, sendMessage } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 
 const navItems: NavItem[] = [
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
   { href: "/patient/find-a-doctor", label: "Find a Doctor", icon: Stethoscope, match: "/patient/find-a-doctor" },
   { href: "/patient/appointments", label: "Appointments", icon: Calendar, match: "/patient/appointments" },
   { href: "/patient/history", label: "Medical History", icon: ScrollText, match: "/patient/history" },
+  { href: "/patient/news", label: "News & Updates", icon: Newspaper, match: "/patient/news" },
   { href: "/patient/profile", label: "Profile", icon: User, match: "/patient/profile" },
   { href: "/patient/messages", label: "Messages", icon: MessageSquare, match: "/patient/messages" },
   { href: "/symptom-checker", label: "Symptom Checker", icon: HeartPulse },
@@ -79,6 +81,7 @@ export default function PatientMessagesPage() {
         ...doc.data(),
         createdAt: doc.data().createdAt.toMillis(),
       })) as Message[];
+      // client-side sort
       newMessages.sort((a, b) => a.createdAt - b.createdAt);
       setMessages(newMessages);
       setLoadingMessages(false);
@@ -232,7 +235,5 @@ export default function PatientMessagesPage() {
     </DashboardLayout>
   );
 }
-
-    
 
     
