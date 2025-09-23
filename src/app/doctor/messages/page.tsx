@@ -1,9 +1,14 @@
 
 "use client";
 
+import { useEffect, useState, useRef, useTransition } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { NavItem } from "@/types";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { NavItem, UserData, Message } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Calendar,
@@ -12,7 +17,13 @@ import {
   Users,
   CalendarClock,
   User,
+  Send,
+  Loader2,
 } from "lucide-react";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { getConversations, getMessages, sendMessage } from "./actions";
+import { useToast } from "@/hooks/use-toast";
+
 
 const navItems: NavItem[] = [
   { href: "/doctor/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,18 +36,192 @@ const navItems: NavItem[] = [
 
 export default function DoctorMessagesPage() {
   const { userData } = useAuth();
+  const { toast } = useToast();
+  const [conversations, setConversations] = useState<UserData[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<UserData | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, startSendingTransition] = useTransition();
+  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const userAvatar = PlaceHolderImages.find((img) => img.id === "avatar-1");
+
+  // Fetch all unique patients the doctor has had appointments with
+  useEffect(() => {
+    if (userData) {
+      getConversations(userData.uid)
+        .then(setConversations)
+        .finally(() => setLoadingConversations(false));
+    }
+  }, [userData]);
+
+  // Fetch messages when a conversation is selected
+  useEffect(() => {
+    if (selectedConversation && userData) {
+      setLoadingMessages(true);
+      getMessages(userData.uid, selectedConversation.uid)
+        .then(setMessages)
+        .finally(() => setLoadingMessages(false));
+    }
+  }, [selectedConversation, userData]);
+
+   // Real-time polling for new messages
+  useEffect(() => {
+    if (!selectedConversation || !userData) return;
+
+    const interval = setInterval(() => {
+      getMessages(userData.uid, selectedConversation.uid).then(newMessages => {
+        setMessages(currentMessages => {
+          if (newMessages.length > currentMessages.length) {
+            return newMessages;
+          }
+          return currentMessages;
+        });
+      });
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [selectedConversation, userData]);
+
+
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
+  }, [messages]);
+
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || !userData) return;
+
+    startSendingTransition(async () => {
+      const result = await sendMessage(userData.uid, selectedConversation.uid, newMessage);
+      if (result.success) {
+        setMessages(prev => [...prev, result.newMessage as Message]);
+        setNewMessage("");
+      } else {
+        toast({
+          title: "Error",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    });
+  };
 
   return (
     <DashboardLayout navItems={navItems} userName={userData?.fullName || 'Doctor'} userRole="Doctor">
-      <h1 className="text-2xl font-bold mb-4 font-headline">My Messages</h1>
-       <Card>
-        <CardHeader>
-          <CardTitle>Coming Soon</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">This page will feature a secure messaging system for communicating with your patients. This feature is currently under development.</p>
-        </CardContent>
-      </Card>
+        <h1 className="text-2xl font-bold mb-4 font-headline">My Messages</h1>
+        <Card className="h-[calc(100vh-10rem)] flex">
+           <div className="w-1/3 border-r">
+                <CardHeader>
+                    <CardTitle>Patients</CardTitle>
+                </CardHeader>
+                <ScrollArea className="h-[calc(100%-4rem)]">
+                    <div className="space-y-1 p-2 pt-0">
+                       {loadingConversations ? (
+                          <div className="flex justify-center items-center h-full p-4">
+                            <Loader2 className="animate-spin text-primary" />
+                          </div>
+                        ) : conversations.length > 0 ? (
+                           conversations.map(patient => {
+                             const patientAvatar = PlaceHolderImages.find((img) => img.id === "avatar-2");
+                             return (
+                                <div 
+                                    key={patient.uid} 
+                                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${selectedConversation?.uid === patient.uid ? 'bg-muted' : ''}`}
+                                    onClick={() => setSelectedConversation(patient)}
+                                >
+                                    <Avatar>
+                                        {patientAvatar && <AvatarImage src={patientAvatar.imageUrl} alt={patient.fullName} data-ai-hint={patientAvatar.imageHint}/>}
+                                        <AvatarFallback>{patient.fullName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 truncate">
+                                        <p className="font-semibold">{patient.fullName}</p>
+                                        <p className="text-sm text-muted-foreground truncate">{patient.email}</p>
+                                    </div>
+                                </div>
+                            )
+                        })
+                       ) : (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            No patient conversations yet.
+                          </div>
+                       )}
+                    </div>
+                </ScrollArea>
+           </div>
+           <div className="w-2/3 flex flex-col">
+              {selectedConversation ? (
+                <>
+                  <CardHeader className="flex-row items-center justify-between border-b">
+                      <CardTitle className="text-lg">{selectedConversation.fullName}</CardTitle>
+                      <CardDescription>{selectedConversation.email}</CardDescription>
+                  </CardHeader>
+                  <CardContent ref={scrollAreaRef} className="flex-1 p-4 overflow-y-auto">
+                      {loadingMessages ? (
+                        <div className="flex justify-center items-center h-full">
+                          <Loader2 className="animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {messages.map(msg => {
+                              const isSender = msg.senderId === userData?.uid;
+                              const avatar = isSender ? userAvatar : PlaceHolderImages.find((img) => img.id === "avatar-2");
+                              return (
+                                <div key={msg.id} className={`flex items-end gap-2 ${isSender ? 'justify-end' : ''}`}>
+                                    {!isSender && 
+                                        <Avatar className="h-8 w-8">
+                                            {avatar && <AvatarImage src={avatar.imageUrl} alt={selectedConversation.fullName} data-ai-hint={avatar.imageHint} />}
+                                            <AvatarFallback>{selectedConversation.fullName.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                    }
+                                    <div className={`max-w-xs md:max-w-md p-3 rounded-xl ${isSender ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                                        <p className="text-sm whitespace-pre-line">{msg.text}</p>
+                                         <p className={`text-xs mt-1 ${isSender ? 'text-primary-foreground/70' : 'text-muted-foreground/70'}`}>
+                                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                    {isSender && 
+                                        <Avatar className="h-8 w-8">
+                                            {avatar && <AvatarImage src={avatar.imageUrl} alt={userData?.fullName || 'Me'} data-ai-hint={avatar.imageHint}/>}
+                                            <AvatarFallback>{userData?.fullName?.charAt(0) || 'D'}</AvatarFallback>
+                                        </Avatar>
+                                    }
+                                </div>
+                              )
+                          })}
+                        </div>
+                      )}
+                  </CardContent>
+                  <div className="p-4 border-t">
+                      <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="relative">
+                          <Input 
+                            placeholder="Type a message..." 
+                            className="pr-12" 
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                          />
+                          <Button size="icon" type="submit" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-10" disabled={isSending}>
+                              {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          </Button>
+                      </form>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <MessageSquare className="h-16 w-16 mb-4" />
+                    <p>Select a patient to view messages</p>
+                </div>
+              )}
+           </div>
+        </Card>
     </DashboardLayout>
   );
 }

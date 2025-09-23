@@ -1,4 +1,5 @@
 
+
 import type { LucideIcon } from "lucide-react";
 import type { Timestamp } from "firebase/firestore";
 
@@ -34,6 +35,15 @@ export interface Appointment {
     endTime: Timestamp;
     status: 'scheduled' | 'completed' | 'cancelled';
     createdAt: Timestamp;
+}
+
+export interface Message {
+    id: string;
+    conversationId: string;
+    senderId: string;
+    receiverId: string;
+    text: string;
+    createdAt: number; // Use number for client-side sorting (milliseconds)
 }
 
     
