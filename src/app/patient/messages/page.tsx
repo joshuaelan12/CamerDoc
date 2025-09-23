@@ -1,13 +1,14 @@
 
 "use client";
 
+import { useEffect, useState, useRef, useTransition } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { NavItem } from "@/types";
+import type { NavItem, UserData, Message } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Calendar,
@@ -17,9 +18,12 @@ import {
   ScrollText,
   Stethoscope,
   Send,
+  Loader2,
   User,
 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { getConversations, getMessages, sendMessage } from "./actions";
+import { useToast } from "@/hooks/use-toast";
 
 
 const navItems: NavItem[] = [
@@ -32,26 +36,86 @@ const navItems: NavItem[] = [
   { href: "/symptom-checker", label: "Symptom Checker", icon: HeartPulse },
 ];
 
-// Placeholder Data
-const conversations = [
-    { id: 1, name: "Dr. Emily Carter", lastMessage: "Yes, that sounds like a good plan.", avatarId: "avatar-2" },
-    { id: 2, name: "Dr. John Adebayo", lastMessage: "Please remember to take the full course.", avatarId: "avatar-3" },
-];
-
-const messages = [
-    { id: 1, sender: "other", text: "Hello! I wanted to follow up on our last appointment." },
-    { id: 2, sender: "me", text: "Hi Dr. Carter. I'm feeling much better, thank you." },
-    { id: 3, sender: "other", text: "That's great to hear. Are you still experiencing any headaches?" },
-    { id: 4, sender: "me", text: "Only occasionally, and they are much milder." },
-    { id: 5, sender: "other", text: "Good. Let's continue with the current plan and check in again in a week." },
-    { id: 6, sender: "me", text: "Okay, sounds good. Thanks!" },
-    { id: 7, sender: "other", text: "You're welcome. Have a great day!" },
-];
-
-
 export default function PatientMessagesPage() {
   const { userData } = useAuth();
+  const { toast } = useToast();
+  const [conversations, setConversations] = useState<UserData[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<UserData | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, startSendingTransition] = useTransition();
+  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const userAvatar = PlaceHolderImages.find((img) => img.id === "avatar-1");
+
+  // Fetch all unique doctors the patient has had appointments with
+  useEffect(() => {
+    if (userData) {
+      getConversations(userData.uid)
+        .then(setConversations)
+        .finally(() => setLoadingConversations(false));
+    }
+  }, [userData]);
+
+  // Fetch messages when a conversation is selected
+  useEffect(() => {
+    if (selectedConversation && userData) {
+      setLoadingMessages(true);
+      getMessages(userData.uid, selectedConversation.uid)
+        .then(setMessages)
+        .finally(() => setLoadingMessages(false));
+    }
+  }, [selectedConversation, userData]);
+
+   // Real-time polling for new messages
+  useEffect(() => {
+    if (!selectedConversation || !userData) return;
+
+    const interval = setInterval(() => {
+      getMessages(userData.uid, selectedConversation.uid).then(newMessages => {
+        setMessages(currentMessages => {
+          if (newMessages.length > currentMessages.length) {
+            return newMessages;
+          }
+          return currentMessages;
+        });
+      });
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [selectedConversation, userData]);
+
+
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
+  }, [messages]);
+
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || !userData) return;
+
+    startSendingTransition(async () => {
+      const result = await sendMessage(userData.uid, selectedConversation.uid, newMessage);
+      if (result.success) {
+        setMessages(prev => [...prev, result.newMessage as Message]);
+        setNewMessage("");
+      } else {
+        toast({
+          title: "Error",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    });
+  };
 
   return (
     <DashboardLayout navItems={navItems} userName={userData?.fullName || 'Patient'} userRole="Patient">
@@ -59,68 +123,107 @@ export default function PatientMessagesPage() {
         <Card className="h-[calc(100vh-10rem)] flex">
            <div className="w-1/3 border-r">
                 <CardHeader>
-                    <CardTitle>Conversations</CardTitle>
+                    <CardTitle>Doctors</CardTitle>
                 </CardHeader>
                 <ScrollArea className="h-[calc(100%-4rem)]">
-                    <div className="space-y-2 p-4 pt-0">
-                        {conversations.map(convo => {
-                             const convoAvatar = PlaceHolderImages.find((img) => img.id === convo.avatarId);
+                    <div className="space-y-1 p-2 pt-0">
+                       {loadingConversations ? (
+                          <div className="flex justify-center items-center h-full p-4">
+                            <Loader2 className="animate-spin text-primary" />
+                          </div>
+                        ) : conversations.length > 0 ? (
+                           conversations.map(doctor => {
+                             const doctorAvatar = PlaceHolderImages.find((img) => img.id === "avatar-2");
                              return (
-                                <div key={convo.id} className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted bg-accent">
+                                <div 
+                                    key={doctor.uid} 
+                                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-muted ${selectedConversation?.uid === doctor.uid ? 'bg-muted' : ''}`}
+                                    onClick={() => setSelectedConversation(doctor)}
+                                >
                                     <Avatar>
-                                        {convoAvatar && <AvatarImage src={convoAvatar.imageUrl} alt={convo.name} data-ai-hint={convoAvatar.imageHint}/>}
-                                        <AvatarFallback>{convo.name.charAt(0)}</AvatarFallback>
+                                        {doctorAvatar && <AvatarImage src={doctorAvatar.imageUrl} alt={doctor.fullName} data-ai-hint={doctorAvatar.imageHint}/>}
+                                        <AvatarFallback>{doctor.fullName.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 truncate">
-                                        <p className="font-semibold">{convo.name}</p>
-                                        <p className="text-sm text-muted-foreground truncate">{convo.lastMessage}</p>
+                                        <p className="font-semibold">{doctor.fullName}</p>
+                                        <p className="text-sm text-muted-foreground truncate">{doctor.specialization}</p>
                                     </div>
                                 </div>
                             )
-                        })}
+                        })
+                       ) : (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            No doctor conversations yet.
+                          </div>
+                       )}
                     </div>
                 </ScrollArea>
            </div>
            <div className="w-2/3 flex flex-col">
-                <CardHeader className="flex-row items-center justify-between border-b">
-                     <CardTitle className="text-lg">Dr. Emily Carter</CardTitle>
-                     <CardDescription>Online</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 p-4 overflow-y-auto">
-                    <div className="space-y-4">
-                        {messages.map(msg => (
-                            <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'me' ? 'justify-end' : ''}`}>
-                                {msg.sender === 'other' && 
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src="https://picsum.photos/seed/avatar2/100/100" alt="Dr. Carter" data-ai-hint="woman portrait"/>
-                                        <AvatarFallback>EC</AvatarFallback>
-                                    </Avatar>
-                                }
-                                <div className={`max-w-xs md:max-w-md p-3 rounded-xl ${msg.sender === 'me' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                                    <p className="text-sm">{msg.text}</p>
+              {selectedConversation ? (
+                <>
+                  <CardHeader className="flex-row items-center justify-between border-b">
+                      <CardTitle className="text-lg">{selectedConversation.fullName}</CardTitle>
+                      <CardDescription>{selectedConversation.specialization}</CardDescription>
+                  </CardHeader>
+                  <CardContent ref={scrollAreaRef} className="flex-1 p-4 overflow-y-auto">
+                      {loadingMessages ? (
+                        <div className="flex justify-center items-center h-full">
+                          <Loader2 className="animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {messages.map(msg => {
+                              const isSender = msg.senderId === userData?.uid;
+                              const avatar = isSender ? userAvatar : PlaceHolderImages.find((img) => img.id === "avatar-2");
+                              return (
+                                <div key={msg.id} className={`flex items-end gap-2 ${isSender ? 'justify-end' : ''}`}>
+                                    {!isSender && 
+                                        <Avatar className="h-8 w-8">
+                                            {avatar && <AvatarImage src={avatar.imageUrl} alt={selectedConversation.fullName} data-ai-hint={avatar.imageHint} />}
+                                            <AvatarFallback>{selectedConversation.fullName.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                    }
+                                    <div className={`max-w-xs md:max-w-md p-3 rounded-xl ${isSender ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                                        <p className="text-sm whitespace-pre-line">{msg.text}</p>
+                                         <p className={`text-xs mt-1 ${isSender ? 'text-primary-foreground/70' : 'text-muted-foreground/70'}`}>
+                                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                    {isSender && 
+                                        <Avatar className="h-8 w-8">
+                                            {avatar && <AvatarImage src={avatar.imageUrl} alt={userData?.fullName || 'Me'} data-ai-hint={avatar.imageHint}/>}
+                                            <AvatarFallback>{userData?.fullName?.charAt(0) || 'P'}</AvatarFallback>
+                                        </Avatar>
+                                    }
                                 </div>
-                                 {msg.sender === 'me' && 
-                                    <Avatar className="h-8 w-8">
-                                         {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt={userData?.fullName || 'Me'} data-ai-hint={userAvatar.imageHint}/>}
-                                        <AvatarFallback>{userData?.fullName?.charAt(0) || 'M'}</AvatarFallback>
-                                    </Avatar>
-                                }
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-                <div className="p-4 border-t">
-                    <div className="relative">
-                        <Input placeholder="Type a message..." className="pr-12" />
-                        <Button size="icon" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-10">
-                            <Send className="h-4 w-4" />
-                        </Button>
-                    </div>
+                              )
+                          })}
+                        </div>
+                      )}
+                  </CardContent>
+                  <div className="p-4 border-t">
+                      <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="relative">
+                          <Input 
+                            placeholder="Type a message..." 
+                            className="pr-12" 
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                          />
+                          <Button size="icon" type="submit" className="absolute top-1/2 right-1 -translate-y-1/2 h-8 w-10" disabled={isSending}>
+                              {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          </Button>
+                      </form>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <MessageSquare className="h-16 w-16 mb-4" />
+                    <p>Select a doctor to view messages</p>
                 </div>
+              )}
            </div>
         </Card>
     </DashboardLayout>
   );
 }
-
-    
