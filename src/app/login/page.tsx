@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/icons/Logo";
@@ -118,6 +118,12 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
+        <CardFooter className="text-sm text-center block">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-primary hover:underline">
+              Sign up
+            </Link>
+        </CardFooter>
       </Card>
     </div>
   );

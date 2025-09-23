@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Logo } from "../icons/Logo";
+import { useAuth } from "@/hooks/use-auth";
 
 const navLinks = [
   { href: "#home", label: "Home" },
@@ -19,6 +20,7 @@ const navLinks = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,12 +59,18 @@ export default function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="ghost" asChild className={cn(isScrolled ? "text-foreground hover:text-primary": "text-white hover:bg-white/10 hover:text-white")}>
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/login">Get Started</Link>
-            </Button>
+            {user ? (
+               <Button variant="ghost" onClick={signOut} className={cn(isScrolled ? "text-foreground hover:text-primary": "text-white hover:bg-white/10 hover:text-white")}>Logout</Button>
+            ) : (
+              <>
+                <Button variant="ghost" asChild className={cn(isScrolled ? "text-foreground hover:text-primary": "text-white hover:bg-white/10 hover:text-white")}>
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           <div className="md:hidden">
@@ -97,14 +105,18 @@ export default function Header() {
                     ))}
                   </nav>
                   <div className="mt-auto pt-6 border-t">
-                    <div className="flex flex-col gap-4">
-                       <Button variant="outline" asChild>
-                        <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
-                      </Button>
-                      <Button asChild>
-                        <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
-                      </Button>
-                    </div>
+                     {user ? (
+                        <Button onClick={() => { signOut(); setIsMobileMenuOpen(false); }} className="w-full">Logout</Button>
+                      ) : (
+                        <div className="flex flex-col gap-4">
+                          <Button variant="outline" asChild>
+                            <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+                          </Button>
+                          <Button asChild>
+                            <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+                          </Button>
+                        </div>
+                      )}
                   </div>
                 </div>
               </SheetContent>
