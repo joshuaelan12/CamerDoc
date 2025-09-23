@@ -11,6 +11,7 @@ const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: z.enum(["patient", "doctor"]),
+  specialization: z.string().optional(),
 });
 
 type SignupInput = z.infer<typeof signupSchema>;
@@ -31,21 +32,27 @@ export async function createUser(values: SignupInput): Promise<FormState> {
     };
   }
 
-  const { fullName, email, password, role } = validatedFields.data;
+  const { fullName, email, password, role, specialization } = validatedFields.data;
 
   try {
     // Create user in Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-
-    // Create user document in Firestore
-    await setDoc(doc(db, "users", user.uid), {
+    
+    const userData: any = {
       uid: user.uid,
       fullName,
       email,
       role,
       createdAt: serverTimestamp(),
-    });
+    };
+
+    if (role === 'doctor' && specialization) {
+      userData.specialization = specialization;
+    }
+
+    // Create user document in Firestore
+    await setDoc(doc(db, "users", user.uid), userData);
 
     return {
       success: true,
