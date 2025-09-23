@@ -52,7 +52,15 @@ export default function PatientHistoryPage() {
     if (!userData) return;
 
     setLoading(true);
+    let appointmentsLoaded = false;
+    let checksLoaded = false;
 
+    const checkLoading = () => {
+        if (appointmentsLoaded && checksLoaded) {
+            setLoading(false);
+        }
+    };
+    
     // Fetch past appointments
     const appointmentsQuery = query(
       collection(db, "appointments"),
@@ -76,7 +84,8 @@ export default function PatientHistoryPage() {
       });
       const resolvedAppointments = await Promise.all(appointmentsPromises);
       setPastAppointments(resolvedAppointments);
-      setLoading(false);
+      appointmentsLoaded = true;
+      checkLoading();
     });
 
     // Fetch symptom checks
@@ -89,7 +98,8 @@ export default function PatientHistoryPage() {
         // Sort on the client side
         checks.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
         setSymptomChecks(checks);
-        setLoading(false);
+        checksLoaded = true;
+        checkLoading();
     });
 
 
