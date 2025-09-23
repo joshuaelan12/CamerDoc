@@ -10,7 +10,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import {
@@ -24,6 +23,7 @@ import {
   Building,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookingDialog } from "./BookingDialog";
 
 const navItems: NavItem[] = [
   { href: "/patient/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -153,7 +153,7 @@ export default function FindDoctorPage() {
                         <span>{doctor.hospitalAffiliation}</span>
                     </p>
                   }
-                  <Button className="w-full" disabled>Book Appointment (Coming Soon)</Button>
+                  {userData && <BookingDialog doctor={doctor} patient={userData} />}
                 </CardContent>
               </Card>
             ))
@@ -167,3 +167,5 @@ export default function FindDoctorPage() {
     </DashboardLayout>
   );
 }
+
+    

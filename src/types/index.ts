@@ -1,5 +1,6 @@
 
 import type { LucideIcon } from "lucide-react";
+import type { Timestamp } from "firebase/firestore";
 
 export type NavItem = {
   href: string;
@@ -24,3 +25,15 @@ export interface UserData {
   gender?: string;
   location?: string;
 }
+
+export interface Appointment {
+    id: string;
+    doctorId: string;
+    patientId: string;
+    startTime: Timestamp;
+    endTime: Timestamp;
+    status: 'scheduled' | 'completed' | 'cancelled';
+    createdAt: Timestamp;
+}
+
+    
