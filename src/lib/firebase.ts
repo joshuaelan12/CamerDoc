@@ -1,0 +1,18 @@
+import { initializeApp, getApp, getApps } from 'firebase/app';
+
+const firebaseConfig = {
+  "projectId": "studio-8874615456-3dcec",
+  "appId": "1:678938621299:web:8ce5f3a8691413f0820106",
+  "apiKey": "AIzaSyAIDKCx9Zck6Rk-K-KJmU9fiwTloaUrDYo",
+  "authDomain": "studio-8874615456-3dcec.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "678938621299"
+};
+
+// Initialize Firebase
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+// It's recommended to export the initialized app object.
+// You can then import this object in other parts of your application
+// to use various Firebase services.
+export { app };
