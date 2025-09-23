@@ -70,8 +70,7 @@ export default function PatientMessagesPage() {
     const conversationId = [userData.uid, selectedConversation.uid].sort().join('_');
     const messagesQuery = query(
       collection(db, "messages"),
-      where("conversationId", "==", conversationId),
-      orderBy("createdAt", "asc")
+      where("conversationId", "==", conversationId)
     );
 
     const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
@@ -80,6 +79,7 @@ export default function PatientMessagesPage() {
         ...doc.data(),
         createdAt: doc.data().createdAt.toMillis(),
       })) as Message[];
+      newMessages.sort((a, b) => a.createdAt - b.createdAt);
       setMessages(newMessages);
       setLoadingMessages(false);
     }, (error) => {
@@ -232,5 +232,7 @@ export default function PatientMessagesPage() {
     </DashboardLayout>
   );
 }
+
+    
 
     

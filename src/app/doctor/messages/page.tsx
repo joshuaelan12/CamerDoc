@@ -21,7 +21,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { getConversations, getMessages, sendMessage } from "./actions";
+import { getConversations, sendMessage } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
@@ -68,16 +68,16 @@ export default function DoctorMessagesPage() {
     const conversationId = [userData.uid, selectedConversation.uid].sort().join('_');
     const messagesQuery = query(
       collection(db, "messages"),
-      where("conversationId", "==", conversationId),
-      orderBy("createdAt", "asc")
+      where("conversationId", "==", conversationId)
     );
 
     const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
       const newMessages = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt.toMillis(),
+        createdAt: doc.data().createdAt?.toMillis(),
       })) as Message[];
+      newMessages.sort((a, b) => a.createdAt - b.createdAt);
       setMessages(newMessages);
       setLoadingMessages(false);
     }, (error) => {
@@ -230,5 +230,7 @@ export default function DoctorMessagesPage() {
     </DashboardLayout>
   );
 }
+
+    
 
     
