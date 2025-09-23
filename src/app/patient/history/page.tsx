@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot, doc, getDoc, orderBy } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, orderBy, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -39,7 +39,7 @@ type SymptomCheck = {
   symptoms: string;
   potentialCauses: string;
   recommendations: string;
-  createdAt: any;
+  createdAt: Timestamp;
 };
 
 export default function PatientHistoryPage() {
@@ -82,11 +82,13 @@ export default function PatientHistoryPage() {
     // Fetch symptom checks
     const checksQuery = query(
         collection(db, "symptomChecks"),
-        where("userId", "==", userData.uid),
-        orderBy("createdAt", "desc")
+        where("userId", "==", userData.uid)
     );
     const unsubChecks = onSnapshot(checksQuery, (snapshot) => {
-        setSymptomChecks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SymptomCheck)));
+        const checks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SymptomCheck));
+        // Sort on the client side
+        checks.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+        setSymptomChecks(checks);
         setLoading(false);
     });
 
