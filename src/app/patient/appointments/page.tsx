@@ -1,6 +1,7 @@
 
 "use client";
 
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,11 +16,13 @@ import {
   ScrollText,
   PlusCircle,
   Video,
+  Stethoscope,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const navItems: NavItem[] = [
   { href: "/patient/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/patient/find-a-doctor", label: "Find a Doctor", icon: Stethoscope, match: "/patient/find-a-doctor" },
   { href: "/patient/appointments", label: "Appointments", icon: Calendar, match: "/patient/appointments" },
   { href: "/patient/history", label: "Medical History", icon: ScrollText, match: "/patient/history" },
   { href: "/patient/messages", label: "Messages", icon: MessageSquare, match: "/patient/messages" },
@@ -54,9 +57,11 @@ export default function PatientAppointmentsPage() {
     <DashboardLayout navItems={navItems} userName={userData?.fullName || 'Patient'} userRole="Patient">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold font-headline">My Appointments</h1>
-        <Button disabled>
+        <Button asChild>
+          <Link href="/patient/find-a-doctor">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Book New Appointment (Coming Soon)
+            Book New Appointment
+          </Link>
         </Button>
       </div>
 

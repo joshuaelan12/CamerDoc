@@ -11,10 +11,12 @@ import {
   LayoutDashboard,
   MessageSquare,
   ScrollText,
+  Stethoscope,
 } from "lucide-react";
 
 const navItems: NavItem[] = [
   { href: "/patient/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/patient/find-a-doctor", label: "Find a Doctor", icon: Stethoscope, match: "/patient/find-a-doctor" },
   { href: "/patient/appointments", label: "Appointments", icon: Calendar, match: "/patient/appointments" },
   { href: "/patient/history", label: "Medical History", icon: ScrollText, match: "/patient/history" },
   { href: "/patient/messages", label: "Messages", icon: MessageSquare, match: "/patient/messages" },

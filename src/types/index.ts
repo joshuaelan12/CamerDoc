@@ -13,13 +13,13 @@ export interface UserData {
   fullName: string;
   email: string;
   role: "patient" | "doctor" | "admin";
-  createdAt: Date;
+  createdAt: any; // Allow for serverTimestamp
   // Doctor specific
   specialization?: string;
   hospitalAffiliation?: string;
   verificationStatus?: 'pending' | 'approved' | 'rejected';
   // Patient specific
-  dateOfBirth?: Date;
+  dateOfBirth?: any; // Allow for serverTimestamp
   gender?: string;
   location?: string;
   phone?: string;
