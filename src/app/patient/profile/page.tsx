@@ -19,6 +19,7 @@ import {
   User,
   Loader2,
   CalendarIcon,
+  Wallet,
 } from "lucide-react";
 
 import type { NavItem } from "@/types";
@@ -109,8 +110,8 @@ export default function PatientProfilePage() {
 
   return (
     <DashboardLayout navItems={navItems} userName={userData?.fullName || 'Patient'} userRole="Patient">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4 font-headline">My Profile</h1>
+      <div className="max-w-2xl mx-auto space-y-8">
+        <h1 className="text-2xl font-bold font-headline">My Profile</h1>
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
@@ -229,6 +230,26 @@ export default function PatientProfilePage() {
                 </Button>
               </form>
             </Form>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment Information</CardTitle>
+            <CardDescription>Manage your payment methods for appointments and services. We use Flutterwave to securely process payments.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+             <Card className="flex items-center justify-between p-4 bg-secondary">
+                <div className="flex items-center gap-4">
+                    <Wallet className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                        <h4 className="font-semibold">MTN Mobile Money</h4>
+                        <p className="text-sm text-muted-foreground">No account added yet.</p>
+                    </div>
+                </div>
+                <Button variant="outline" disabled>Manage</Button>
+            </Card>
+            <Button disabled>Add Payment Method (Coming Soon)</Button>
           </CardContent>
         </Card>
       </div>
