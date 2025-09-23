@@ -12,6 +12,7 @@ import {
   MessageSquare,
   ScrollText,
   Stethoscope,
+  User,
 } from "lucide-react";
 
 const navItems: NavItem[] = [
@@ -19,6 +20,7 @@ const navItems: NavItem[] = [
   { href: "/patient/find-a-doctor", label: "Find a Doctor", icon: Stethoscope, match: "/patient/find-a-doctor" },
   { href: "/patient/appointments", label: "Appointments", icon: Calendar, match: "/patient/appointments" },
   { href: "/patient/history", label: "Medical History", icon: ScrollText, match: "/patient/history" },
+  { href: "/patient/profile", label: "Profile", icon: User, match: "/patient/profile" },
   { href: "/patient/messages", label: "Messages", icon: MessageSquare, match: "/patient/messages" },
   { href: "/symptom-checker", label: "Symptom Checker", icon: HeartPulse },
 ];

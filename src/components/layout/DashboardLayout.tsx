@@ -53,6 +53,19 @@ export default function DashboardLayout({
   const currentUserName = userData?.fullName || userName;
   const currentUserRole = userData?.role || userRole;
 
+  const getProfileLink = () => {
+    switch(currentUserRole) {
+      case 'admin':
+        return '/admin/profile';
+      case 'doctor':
+        return '/doctor/profile';
+      case 'patient':
+        return '/patient/profile';
+      default:
+        return '#';
+    }
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -92,9 +105,11 @@ export default function DashboardLayout({
             <DropdownMenuContent side="right" align="start" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+              <DropdownMenuItem asChild>
+                <Link href={getProfileLink()}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />

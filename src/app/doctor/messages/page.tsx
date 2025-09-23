@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Users,
   CalendarClock,
+  User,
 } from "lucide-react";
 
 const navItems: NavItem[] = [
@@ -18,6 +19,7 @@ const navItems: NavItem[] = [
   { href: "/doctor/appointments", label: "Appointments", icon: Calendar, match: "/doctor/appointments" },
   { href: "/doctor/availability", label: "Availability", icon: CalendarClock, match: "/doctor/availability" },
   { href: "/doctor/patients", label: "Patients", icon: Users, match: "/doctor/patients" },
+  { href: "/doctor/profile", label: "Profile", icon: User, match: "/doctor/profile" },
   { href: "/doctor/messages", label: "Messages", icon: MessageSquare, match: "/doctor/messages" },
 ];
 
@@ -38,5 +40,3 @@ export default function DoctorMessagesPage() {
     </DashboardLayout>
   );
 }
-
-    
