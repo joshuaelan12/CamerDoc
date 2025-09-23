@@ -1,8 +1,10 @@
+
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { NavItem } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Calendar,
   HeartPulse,
@@ -20,8 +22,10 @@ const navItems: NavItem[] = [
 ];
 
 export default function PatientDashboardPage() {
+  const { userData } = useAuth();
+
   return (
-    <DashboardLayout navItems={navItems} userName="Jane Doe" userRole="Patient">
+    <DashboardLayout navItems={navItems} userName={userData?.fullName || 'Patient'} userRole="Patient">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -29,8 +33,8 @@ export default function PatientDashboardPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Dr. Smith</div>
-            <p className="text-xs text-muted-foreground">Tomorrow at 10:00 AM</p>
+            <div className="text-2xl font-bold">No appointments</div>
+            <p className="text-xs text-muted-foreground">Check back for updates</p>
           </CardContent>
         </Card>
         <Card>
@@ -39,8 +43,8 @@ export default function PatientDashboardPage() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2 New</div>
-            <p className="text-xs text-muted-foreground">From Dr. Smith & Admin</p>
+            <div className="text-2xl font-bold">Coming Soon</div>
+            <p className="text-xs text-muted-foreground">This will show new messages</p>
           </CardContent>
         </Card>
         <Card>
@@ -49,8 +53,8 @@ export default function PatientDashboardPage() {
             <ScrollText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Normal</div>
-            <p className="text-xs text-muted-foreground">On 24th May 2024</p>
+            <div className="text-2xl font-bold">Coming Soon</div>
+            <p className="text-xs text-muted-foreground">This will show your history</p>
           </CardContent>
         </Card>
       </div>
