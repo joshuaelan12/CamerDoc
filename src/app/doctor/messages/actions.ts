@@ -29,7 +29,17 @@ export async function getConversations(doctorId: string): Promise<UserData[]> {
     );
     const usersSnapshot = await getDocs(usersQuery);
 
-    return usersSnapshot.docs.map(doc => doc.data() as UserData);
+    return usersSnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Convert Timestamps to serializable format
+        const userData: UserData = {
+            ...data,
+            uid: doc.id,
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
+            dateOfBirth: data.dateOfBirth?.toDate ? data.dateOfBirth.toDate().toISOString() : null,
+        } as UserData;
+        return userData;
+    });
   } catch (error) {
     console.error("Error fetching conversations: ", error);
     return [];
