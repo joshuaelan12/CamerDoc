@@ -1,7 +1,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -46,7 +48,49 @@ export default function DoctorAvailabilityPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!date || !userData) return;
+
+      setIsLoadingSlots(true);
+      const availabilityDate = new Date(date);
+      availabilityDate.setHours(0, 0, 0, 0);
+
+      const docId = `${userData.uid}_${availabilityDate.toISOString().split("T")[0]}`;
+      const availabilityRef = doc(db, "availabilities", docId);
+
+      try {
+        const docSnap = await getDoc(availabilityRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const savedSlots = data.timeSlots.map((slot: { startTime: string }) => {
+            const slotDate = new Date(slot.startTime);
+            const hour = slotDate.getHours().toString().padStart(2, '0');
+            const minute = slotDate.getMinutes().toString().padStart(2, '0');
+            return `slot-${hour}-${minute}`;
+          });
+          setSelectedSlots(savedSlots);
+        } else {
+          setSelectedSlots([]);
+        }
+      } catch (error) {
+        console.error("Error fetching availability:", error);
+        toast({
+          title: "Error",
+          description: "Could not fetch existing availability.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoadingSlots(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [date, userData, toast]);
+
 
   const handleSlotChange = (slotId: string) => {
     setSelectedSlots(prev =>
@@ -56,15 +100,24 @@ export default function DoctorAvailabilityPage() {
 
   const handleSubmit = async () => {
     if (!date || !userData) {
-        toast({ title: "Error", description: "Please select a date.", variant: "destructive"});
+        toast({ title: "Error", description: "Please select a date and ensure you are logged in.", variant: "destructive"});
         return;
     }
 
     setIsSubmitting(true);
     
-    const slotsToSave = selectedSlots.map(slotId => {
+    // Sort selected slots by time
+    const sortedSlots = [...selectedSlots].sort((a, b) => {
+      const timeA = timeSlotsOptions.find(opt => opt.id === a)!.time;
+      const timeB = timeSlotsOptions.find(opt => opt.id === b)!.time;
+      return timeA.localeCompare(timeB);
+    });
+
+    const slotsToSave = sortedSlots.map(slotId => {
         const option = timeSlotsOptions.find(opt => opt.id === slotId);
-        const [hour, minute] = option!.time.split(':');
+        if (!option) return null;
+        
+        const [hour, minute] = option.time.split(':');
         const startTime = new Date(date);
         startTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
 
@@ -75,10 +128,10 @@ export default function DoctorAvailabilityPage() {
             startTime: startTime.toISOString(),
             endTime: endTime.toISOString(),
         }
-    });
+    }).filter(Boolean); // Filter out any nulls if a slotId wasn't found
 
     try {
-        const result = await saveAvailability(userData.uid, date, slotsToSave);
+        const result = await saveAvailability(userData.uid, date, slotsToSave as { startTime: string; endTime: string }[]);
         if (result.success) {
             toast({ title: "Success", description: result.message });
         } else {
@@ -121,19 +174,25 @@ export default function DoctorAvailabilityPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                        {timeSlotsOptions.map((slot) => (
-                           <div key={slot.id} className="flex items-center space-x-2">
-                               <Checkbox 
-                                id={slot.id} 
-                                onCheckedChange={() => handleSlotChange(slot.id)}
-                                checked={selectedSlots.includes(slot.id)}
-                               />
-                               <Label htmlFor={slot.id} className="text-sm font-normal cursor-pointer">{slot.label}</Label>
-                           </div>
-                        ))}
-                    </div>
-                    <Button onClick={handleSubmit} disabled={isSubmitting} className="mt-6 w-full">
+                    {isLoadingSlots ? (
+                       <div className="flex items-center justify-center h-48">
+                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                       </div>
+                    ) : (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {timeSlotsOptions.map((slot) => (
+                             <div key={slot.id} className="flex items-center space-x-2">
+                                 <Checkbox 
+                                  id={slot.id} 
+                                  onCheckedChange={() => handleSlotChange(slot.id)}
+                                  checked={selectedSlots.includes(slot.id)}
+                                 />
+                                 <Label htmlFor={slot.id} className="text-sm font-normal cursor-pointer">{slot.label}</Label>
+                             </div>
+                          ))}
+                      </div>
+                    )}
+                    <Button onClick={handleSubmit} disabled={isSubmitting || isLoadingSlots} className="mt-6 w-full">
                         {isSubmitting ? <Loader2 className="animate-spin" /> : "Save Availability"}
                     </Button>
                 </CardContent>
