@@ -13,8 +13,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/icons/Logo";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { doc, getDoc } from "firebase/firestore";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -38,11 +39,20 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
       
-      // In a real app, you would fetch user role from Firestore
-      // For now we'll simulate it based on email
-      if (values.email.includes('admin')) {
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      let role = 'patient'; // Default role
+      if (userDoc.exists()) {
+        role = userDoc.data()?.role;
+      } else if (values.email.includes('admin')) {
+        // Fallback for the initial admin user that might not be in firestore
+        role = 'admin';
+      }
+
+      if (role === 'admin') {
         router.push("/admin/dashboard");
-      } else if (values.email.includes('doctor')) {
+      } else if (role === 'doctor') {
         router.push("/doctor/dashboard");
       } else {
         router.push("/patient/dashboard");
@@ -107,12 +117,6 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-          <div className="mt-6 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-primary hover:underline">
-              Sign up
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

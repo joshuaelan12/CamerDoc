@@ -92,7 +92,7 @@ export default function Home() {
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-                  <Link href="/signup">
+                  <Link href="/login">
                     Get Started <ArrowRight className="ml-2" />
                   </Link>
                 </Button>

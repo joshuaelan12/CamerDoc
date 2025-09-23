@@ -61,7 +61,7 @@ export default function Header() {
               <Link href="/login">Login</Link>
             </Button>
             <Button asChild>
-              <Link href="/signup">Sign Up</Link>
+              <Link href="/login">Get Started</Link>
             </Button>
           </div>
 
@@ -102,7 +102,7 @@ export default function Header() {
                         <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
                       </Button>
                       <Button asChild>
-                        <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+                        <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
                       </Button>
                     </div>
                   </div>
