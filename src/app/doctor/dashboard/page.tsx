@@ -13,6 +13,8 @@ import {
   Users,
   Hourglass,
   XCircle,
+  Building,
+  Stethoscope,
 } from "lucide-react";
 
 const navItems: NavItem[] = [
@@ -30,7 +32,7 @@ export default function DoctorDashboardPage() {
   const isRejected = verificationStatus === 'rejected';
 
   return (
-    <DashboardLayout navItems={navItems} userName="Dr. John Smith" userRole="Doctor">
+    <DashboardLayout navItems={navItems} userName={userData?.fullName || 'Doctor'} userRole="Doctor">
       {isPending && (
         <Alert className="mb-4 bg-yellow-50 border-yellow-200 text-yellow-800 [&>svg]:text-yellow-600">
           <Hourglass className="h-4 w-4" />
@@ -52,12 +54,22 @@ export default function DoctorDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Appointments</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Specialization</CardTitle>
+            <Stethoscope className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">+3 from yesterday</p>
+            <div className="text-2xl font-bold">{userData?.specialization || 'N/A'}</div>
+            <p className="text-xs text-muted-foreground">Your registered medical field</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Affiliation</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userData?.hospitalAffiliation || 'None'}</div>
+            <p className="text-xs text-muted-foreground">Your hospital or clinic</p>
           </CardContent>
         </Card>
         <Card>
@@ -66,18 +78,8 @@ export default function DoctorDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">256</div>
-            <p className="text-xs text-muted-foreground">+10 this month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unread Messages</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">From patients and admin</p>
+            <div className="text-2xl font-bold">Coming Soon</div>
+            <p className="text-xs text-muted-foreground">This will show your patient count</p>
           </CardContent>
         </Card>
       </div>
