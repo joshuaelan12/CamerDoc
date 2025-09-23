@@ -1,7 +1,10 @@
+
 "use server";
 
 import { z } from "zod";
 import { aiSymptomChecker } from "@/ai/flows/ai-symptom-checker";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const symptomSchema = z.object({
   symptoms: z.string().min(10, "Please describe your symptoms in more detail."),
@@ -39,6 +42,14 @@ export async function getSymptomAnalysis(
   try {
     const result = await aiSymptomChecker({
       symptoms: validatedFields.data.symptoms,
+    });
+
+    // Log the check to Firestore
+    await addDoc(collection(db, "symptomChecks"), {
+        symptoms: validatedFields.data.symptoms,
+        potentialCauses: result.potentialCauses,
+        recommendations: result.recommendations,
+        createdAt: serverTimestamp(),
     });
     
     return {
