@@ -1,4 +1,6 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   "projectId": "studio-8874615456-3dcec",
@@ -11,8 +13,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// It's recommended to export the initialized app object.
-// You can then import this object in other parts of your application
-// to use various Firebase services.
-export { app };
+export { app, auth, db };

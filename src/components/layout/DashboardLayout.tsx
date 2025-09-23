@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link";
@@ -30,12 +31,13 @@ import type { NavItem } from "@/types";
 import { cn } from "@/lib/utils";
 import { LogOut, Settings, User } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useAuth } from "@/hooks/use-auth";
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
   navItems: NavItem[];
-  userName: string;
-  userRole: string;
+  userName: string; // This will be overridden by auth user
+  userRole: string; // This will be overridden by auth user
 };
 
 export default function DashboardLayout({
@@ -46,6 +48,10 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const pathname = usePathname();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "avatar-1");
+  const { userData, signOut } = useAuth();
+
+  const currentUserName = userData?.fullName || userName;
+  const currentUserRole = userData?.role || userRole;
 
   return (
     <SidebarProvider>
@@ -74,12 +80,12 @@ export default function DashboardLayout({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-2 p-2 h-auto">
                  <Avatar className="h-8 w-8">
-                  {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt={userName} data-ai-hint={userAvatar.imageHint}/>}
-                  <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
+                  {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt={currentUserName} data-ai-hint={userAvatar.imageHint}/>}
+                  <AvatarFallback>{currentUserName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="text-left group-data-[collapsible=icon]:hidden">
-                  <p className="font-semibold text-sm">{userName}</p>
-                  <p className="text-xs text-muted-foreground">{userRole}</p>
+                  <p className="font-semibold text-sm">{currentUserName}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{currentUserRole}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -95,11 +101,9 @@ export default function DashboardLayout({
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                 <Link href="/">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                 </Link>
+              <DropdownMenuItem onClick={signOut}>
+                 <LogOut className="mr-2 h-4 w-4" />
+                 <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

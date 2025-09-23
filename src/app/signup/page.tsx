@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -5,6 +6,8 @@ import { useRouter } from "next/navigation";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Logo } from "@/components/icons/Logo";
 import { useToast } from "@/hooks/use-toast";
+import { auth, db } from "@/lib/firebase";
 
 
 const formSchema = z.object({
@@ -37,18 +41,37 @@ export default function SignupPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Mock signup logic
-    console.log("Creating new user:", values);
-    toast({
-      title: "Account Created!",
-      description: "Redirecting you to the login page.",
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
 
-    // In a real app, you would handle the signup API call and then redirect
-    setTimeout(() => {
-      router.push("/login");
-    }, 2000);
+      // Store user info in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        fullName: values.fullName,
+        email: values.email,
+        role: values.role,
+        createdAt: new Date(),
+      });
+
+      toast({
+        title: "Account Created!",
+        description: "Redirecting you to the login page.",
+      });
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("Signup Error:", error);
+      toast({
+        title: "Signup Failed",
+        description: error.message || "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (
@@ -133,8 +156,8 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Create Account
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                 {form.formState.isSubmitting ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
           </Form>

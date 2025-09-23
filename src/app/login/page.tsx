@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -5,49 +6,55 @@ import { useRouter } from "next/navigation";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/icons/Logo";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { auth } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string().min(1, { message: "Password is required." }),
-  role: z.enum(["patient", "doctor", "admin"], { required_error: "You need to select a role." }),
 });
 
 export default function LoginPage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
-      role: "patient",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // This is a mock login. In a real app, you'd call an authentication API.
-    console.log(values);
-    
-    // Redirect based on role
-    switch (values.role) {
-      case "patient":
-        router.push("/patient/dashboard");
-        break;
-      case "doctor":
-        router.push("/doctor/dashboard");
-        break;
-      case "admin":
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+      
+      // In a real app, you would fetch user role from Firestore
+      // For now we'll simulate it based on email
+      if (values.email.includes('admin')) {
         router.push("/admin/dashboard");
-        break;
-      default:
-        router.push("/");
+      } else if (values.email.includes('doctor')) {
+        router.push("/doctor/dashboard");
+      } else {
+        router.push("/patient/dashboard");
+      }
+
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      toast({
+        title: "Login Failed",
+        description: error.message || "An unexpected error occurred.",
+        variant: "destructive",
+      });
     }
   }
 
@@ -95,44 +102,8 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Login as (for demo)</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="patient" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Patient</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="doctor" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Doctor</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="admin" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Admin</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full">
-                Login
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
               </Button>
             </form>
           </Form>
