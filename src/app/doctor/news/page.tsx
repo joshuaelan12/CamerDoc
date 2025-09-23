@@ -61,11 +61,13 @@ export default function DoctorNewsPage() {
 
     useEffect(() => {
         setLoading(true);
-        const annQuery = query(collection(db, "announcements"), where("status", "==", "published"), orderBy("createdAt", "desc"));
+        const annQuery = query(collection(db, "announcements"), where("status", "==", "published"));
         const faqQuery = query(collection(db, "faqs"), where("status", "==", "published"));
 
         const unsubAnn = onSnapshot(annQuery, (snapshot) => {
-            setAnnouncements(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement)));
+            const announcementsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
+            announcementsData.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+            setAnnouncements(announcementsData);
             checkLoadingComplete();
         });
 
@@ -171,5 +173,3 @@ export default function DoctorNewsPage() {
     </DashboardLayout>
   );
 }
-
-    
