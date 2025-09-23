@@ -17,7 +17,6 @@ import {
   MessageSquare,
   Phone,
   Stethoscope,
-  Video,
 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Header from "@/components/layout/Header";
@@ -28,14 +27,14 @@ const aboutImage = PlaceHolderImages.find((img) => img.id === "doctor-smiling");
 
 const howItWorksSteps = [
   {
-    icon: MessageSquare,
+    icon: HeartPulse,
     title: "Symptom Check",
     description: "Use our AI symptom checker to get initial insights.",
   },
   {
-    icon: Video,
+    icon: MessageSquare,
     title: "Book Appointment",
-    description: "Schedule a video consultation with a certified doctor.",
+    description: "Schedule a consultation with a certified doctor via WhatsApp.",
   },
   {
     icon: Stethoscope,
@@ -51,7 +50,7 @@ const faqs = [
   },
   {
     question: "How do I book an appointment?",
-    answer: "After signing up as a patient, you can browse available doctors and schedule an appointment through your dashboard. You will receive a confirmation and reminders for your upcoming consultation.",
+    answer: "After signing up as a patient, you can browse available doctors and schedule an appointment through your dashboard. You will receive a confirmation and can contact the doctor via WhatsApp at the scheduled time.",
   },
   {
     question: "Is my personal data secure?",

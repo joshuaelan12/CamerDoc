@@ -16,7 +16,6 @@ import {
   MessageSquare,
   Users,
   Loader2,
-  Video,
   User,
   CalendarClock,
 } from "lucide-react";
@@ -67,7 +66,7 @@ export default function DoctorAppointmentsPage() {
             const patientRef = doc(db, "users", appointmentData.patientId);
             const patientSnap = await getDoc(patientRef);
             if (patientSnap.exists()) {
-                patientData = patientSnap.data() as UserData;
+                patientData = { uid: patientSnap.id, ...patientSnap.data() } as UserData;
             }
         }
 
@@ -128,10 +127,14 @@ export default function DoctorAppointmentsPage() {
                                     <span>{appt.startTime.toDate().toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}</span>
                                 </p>
                                  <p className="flex items-center gap-2 text-muted-foreground">
-                                    <Video className="h-5 w-5" />
-                                    <span>Video Call</span>
+                                    <MessageSquare className="h-5 w-5" />
+                                    <span>WhatsApp</span>
                                 </p>
-                                <Button className="w-full">Join Video Call</Button>
+                                <Button className="w-full" asChild>
+                                  <a href={`https://wa.me/${appt.patient?.phone}`} target="_blank" rel="noopener noreferrer">
+                                    Message on WhatsApp
+                                  </a>
+                                </Button>
                             </CardContent>
                         </Card>
                     ))}
@@ -188,5 +191,3 @@ export default function DoctorAppointmentsPage() {
     </DashboardLayout>
   );
 }
-
-    

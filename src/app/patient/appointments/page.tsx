@@ -18,7 +18,6 @@ import {
   MessageSquare,
   ScrollText,
   PlusCircle,
-  Video,
   Stethoscope,
   Loader2,
 } from "lucide-react";
@@ -128,10 +127,14 @@ export default function PatientAppointmentsPage() {
                                     <span>{appt.startTime.toDate().toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}</span>
                                 </p>
                                  <p className="flex items-center gap-2 text-muted-foreground">
-                                    <Video className="h-5 w-5" />
-                                    <span>Video Call</span>
+                                    <MessageSquare className="h-5 w-5" />
+                                    <span>WhatsApp</span>
                                 </p>
-                                <Button className="w-full">Join Video Call</Button>
+                                <Button className="w-full" asChild>
+                                  <a href={`https://wa.me/${appt.doctor?.phone}`} target="_blank" rel="noopener noreferrer">
+                                    Message on WhatsApp
+                                  </a>
+                                </Button>
                             </CardContent>
                         </Card>
                     ))}
