@@ -22,8 +22,10 @@ import {
   User,
 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { getConversations, getMessages, sendMessage } from "./actions";
+import { getConversations, sendMessage } from "./actions";
 import { useToast } from "@/hooks/use-toast";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
 
 
 const navItems: NavItem[] = [
@@ -53,39 +55,42 @@ export default function PatientMessagesPage() {
   // Fetch all unique doctors the patient has had appointments with
   useEffect(() => {
     if (userData) {
+      setLoadingConversations(true);
       getConversations(userData.uid)
         .then(setConversations)
         .finally(() => setLoadingConversations(false));
     }
   }, [userData]);
 
-  // Fetch messages when a conversation is selected
-  useEffect(() => {
-    if (selectedConversation && userData) {
-      setLoadingMessages(true);
-      getMessages(userData.uid, selectedConversation.uid)
-        .then(setMessages)
-        .finally(() => setLoadingMessages(false));
-    }
-  }, [selectedConversation, userData]);
-
-   // Real-time polling for new messages
+  // Set up real-time listener for messages when a conversation is selected
   useEffect(() => {
     if (!selectedConversation || !userData) return;
 
-    const interval = setInterval(() => {
-      getMessages(userData.uid, selectedConversation.uid).then(newMessages => {
-        setMessages(currentMessages => {
-          if (newMessages.length > currentMessages.length) {
-            return newMessages;
-          }
-          return currentMessages;
-        });
-      });
-    }, 5000); // Poll every 5 seconds
+    setLoadingMessages(true);
+    const conversationId = [userData.uid, selectedConversation.uid].sort().join('_');
+    const messagesQuery = query(
+      collection(db, "messages"),
+      where("conversationId", "==", conversationId),
+      orderBy("createdAt", "asc")
+    );
 
-    return () => clearInterval(interval);
-  }, [selectedConversation, userData]);
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const newMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt.toMillis(),
+      })) as Message[];
+      setMessages(newMessages);
+      setLoadingMessages(false);
+    }, (error) => {
+        console.error("Error fetching real-time messages:", error);
+        toast({ title: "Error", description: "Could not load messages.", variant: "destructive"});
+        setLoadingMessages(false);
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount or when conversation changes
+
+  }, [selectedConversation, userData, toast]);
 
 
   // Scroll to bottom when new messages are added
@@ -101,13 +106,13 @@ export default function PatientMessagesPage() {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !userData) return;
+    const currentMessage = newMessage;
+    setNewMessage(""); // Clear input immediately for better UX
 
     startSendingTransition(async () => {
-      const result = await sendMessage(userData.uid, selectedConversation.uid, newMessage);
-      if (result.success) {
-        setMessages(prev => [...prev, result.newMessage as Message]);
-        setNewMessage("");
-      } else {
+      const result = await sendMessage(userData.uid, selectedConversation.uid, currentMessage);
+      if (!result.success) {
+        setNewMessage(currentMessage); // Restore message on failure
         toast({
           title: "Error",
           description: result.message,
@@ -227,3 +232,5 @@ export default function PatientMessagesPage() {
     </DashboardLayout>
   );
 }
+
+    

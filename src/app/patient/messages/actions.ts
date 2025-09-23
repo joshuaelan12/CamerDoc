@@ -23,50 +23,35 @@ export async function getConversations(patientId: string): Promise<UserData[]> {
       return [];
     }
 
-    const usersQuery = query(
-      collection(db, "users"),
-      where("uid", "in", Array.from(doctorIds))
-    );
-    const usersSnapshot = await getDocs(usersQuery);
-
-    return usersSnapshot.docs.map(doc => {
-        const data = doc.data();
-        const userData: UserData = {
-            ...data,
-            uid: doc.id,
-            createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
-            dateOfBirth: data.dateOfBirth?.toDate ? data.dateOfBirth.toDate().toISOString() : null,
-        } as UserData;
-        return userData;
+    const doctorIdsArray = Array.from(doctorIds);
+    const userPromises = [];
+    for (let i = 0; i < doctorIdsArray.length; i += 30) {
+        const chunk = doctorIdsArray.slice(i, i + 30);
+         const usersQuery = query(
+            collection(db, "users"),
+            where("uid", "in", chunk)
+        );
+        userPromises.push(getDocs(usersQuery));
+    }
+    
+    const userSnapshots = await Promise.all(userPromises);
+    const users: UserData[] = [];
+    userSnapshots.forEach(snapshot => {
+        snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const userData: UserData = {
+                ...data,
+                uid: doc.id,
+                createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
+                dateOfBirth: data.dateOfBirth?.toDate ? data.dateOfBirth.toDate().toISOString() : null,
+            } as UserData;
+            users.push(userData);
+        });
     });
+
+    return users;
   } catch (error) {
     console.error("Error fetching conversations: ", error);
-    return [];
-  }
-}
-
-// Get messages for a specific conversation
-export async function getMessages(patientId: string, doctorId: string): Promise<Message[]> {
-  try {
-    const conversationId = [doctorId, patientId].sort().join('_');
-    
-    const messagesQuery = query(
-      collection(db, "messages"),
-      where("conversationId", "==", conversationId),
-      orderBy("createdAt", "asc")
-    );
-
-    const messagesSnapshot = await getDocs(messagesQuery);
-
-    return messagesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: (doc.data().createdAt as Timestamp).toMillis(),
-    })) as Message[];
-
-  } catch (error) {
-    console.error("Error fetching messages: ", error);
-    // This could be because the index is missing. We return empty array in that case.
     return [];
   }
 }
@@ -80,30 +65,21 @@ export async function sendMessage(senderId: string, receiverId: string, text: st
   
   try {
     const conversationId = [senderId, receiverId].sort().join('_');
-    const createdAt = serverTimestamp();
 
-    const docRef = await addDoc(collection(db, "messages"), {
+    await addDoc(collection(db, "messages"), {
       conversationId,
       senderId,
       receiverId,
       text,
-      createdAt,
+      createdAt: serverTimestamp(),
     });
-    
-    // We can't return the server timestamp directly, so we use current date as an approximation for the optimistic update
-    const optimisticNewMessage = {
-        id: docRef.id,
-        conversationId,
-        senderId,
-        receiverId,
-        text,
-        createdAt: Date.now()
-    }
 
-    return { success: true, message: "Message sent.", newMessage: optimisticNewMessage };
+    return { success: true, message: "Message sent." };
 
   } catch (error) {
     console.error("Error sending message: ", error);
     return { success: false, message: "An unexpected error occurred." };
   }
 }
+
+    
