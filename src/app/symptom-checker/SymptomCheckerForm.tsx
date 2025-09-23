@@ -1,6 +1,8 @@
+
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,7 +44,7 @@ function SubmitButton() {
 }
 
 export function SymptomCheckerForm({ getSymptomAnalysis }: { getSymptomAnalysis: (prevState: FormState, formData: FormData) => Promise<FormState> }) {
-  const [state, formAction] = useFormState(getSymptomAnalysis, initialState);
+  const [state, formAction] = useActionState(getSymptomAnalysis, initialState);
 
   return (
     <Card>
