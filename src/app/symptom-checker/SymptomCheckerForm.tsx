@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Lightbulb, Loader2, ServerCrash, Sparkles, TriangleAlert } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 type FormState = {
   success: boolean;
@@ -45,6 +46,7 @@ function SubmitButton() {
 
 export function SymptomCheckerForm({ getSymptomAnalysis }: { getSymptomAnalysis: (prevState: FormState, formData: FormData) => Promise<FormState> }) {
   const [state, formAction] = useActionState(getSymptomAnalysis, initialState);
+  const { user } = useAuth();
 
   return (
     <Card>
@@ -63,6 +65,8 @@ export function SymptomCheckerForm({ getSymptomAnalysis }: { getSymptomAnalysis:
             required
             className="text-base"
           />
+
+          {user && <input type="hidden" name="userId" value={user.uid} />}
 
           <Alert>
             <TriangleAlert className="h-4 w-4" />

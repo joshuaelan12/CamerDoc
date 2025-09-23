@@ -8,6 +8,7 @@ import { db } from "@/lib/firebase";
 
 const symptomSchema = z.object({
   symptoms: z.string().min(10, "Please describe your symptoms in more detail."),
+  userId: z.string().optional(),
 });
 
 type AnalysisResult = {
@@ -25,10 +26,9 @@ export async function getSymptomAnalysis(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const symptoms = formData.get("symptoms");
-
   const validatedFields = symptomSchema.safeParse({
-    symptoms,
+    symptoms: formData.get("symptoms"),
+    userId: formData.get("userId"),
   });
 
   if (!validatedFields.success) {
@@ -44,9 +44,12 @@ export async function getSymptomAnalysis(
       symptoms: validatedFields.data.symptoms,
     });
 
+    const { userId, symptoms } = validatedFields.data;
+
     // Log the check to Firestore
     await addDoc(collection(db, "symptomChecks"), {
-        symptoms: validatedFields.data.symptoms,
+        userId: userId || null, // Store null if user is not logged in
+        symptoms,
         potentialCauses: result.potentialCauses,
         recommendations: result.recommendations,
         createdAt: serverTimestamp(),
