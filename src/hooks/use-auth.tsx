@@ -41,18 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserData(userDoc.data() as UserData);
         } else {
           // Handle cases where user exists in Auth but not in Firestore
-          // This could be an admin user created manually in Firebase console
-           if (user.email?.includes('admin')) {
-             setUserData({
-               uid: user.uid,
-               email: user.email!,
-               role: 'admin',
-               fullName: 'Admin User',
-               createdAt: new Date(),
-             });
-           } else {
-            setUserData(null);
-           }
+          // This will be an admin user created manually in Firebase console
+          setUserData({
+            uid: user.uid,
+            email: user.email!,
+            role: 'admin',
+            fullName: 'Admin User',
+            createdAt: new Date(),
+          });
         }
       } else {
         setUserData(null);

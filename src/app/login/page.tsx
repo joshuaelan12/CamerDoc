@@ -42,12 +42,9 @@ export default function LoginPage() {
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
-      let role = 'patient'; // Default role
+      let role = 'admin'; // Default to admin for users without a role doc
       if (userDoc.exists()) {
         role = userDoc.data()?.role;
-      } else if (values.email.includes('admin')) {
-        // Fallback for the initial admin user that might not be in firestore
-        role = 'admin';
       }
 
       if (role === 'admin') {
