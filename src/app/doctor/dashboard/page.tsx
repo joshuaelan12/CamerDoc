@@ -11,7 +11,8 @@ import {
   LayoutDashboard,
   MessageSquare,
   Users,
-  Hourglass
+  Hourglass,
+  XCircle,
 } from "lucide-react";
 
 const navItems: NavItem[] = [
@@ -23,16 +24,28 @@ const navItems: NavItem[] = [
 
 export default function DoctorDashboardPage() {
   const { userData } = useAuth();
-  const isPendingVerification = userData?.verificationStatus === 'pending';
+  const verificationStatus = userData?.verificationStatus;
+
+  const isPending = verificationStatus === 'pending';
+  const isRejected = verificationStatus === 'rejected';
 
   return (
     <DashboardLayout navItems={navItems} userName="Dr. John Smith" userRole="Doctor">
-      {isPendingVerification && (
+      {isPending && (
         <Alert className="mb-4 bg-yellow-50 border-yellow-200 text-yellow-800 [&>svg]:text-yellow-600">
           <Hourglass className="h-4 w-4" />
           <AlertTitle>Verification Pending</AlertTitle>
           <AlertDescription>
             Your account is currently under review by an administrator. You will be notified once your verification is complete.
+          </AlertDescription>
+        </Alert>
+      )}
+      {isRejected && (
+         <Alert variant="destructive" className="mb-4">
+          <XCircle className="h-4 w-4" />
+          <AlertTitle>Verification Rejected</AlertTitle>
+          <AlertDescription>
+            Unfortunately, your verification was not approved. Please contact support for more information.
           </AlertDescription>
         </Alert>
       )}
