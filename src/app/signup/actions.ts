@@ -7,11 +7,15 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
 const signupSchema = z.object({
-  fullName: z.string().min(2),
+  fullName: z.string().min(2, "Full name is required"),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["patient", "doctor"]),
   specialization: z.string().optional(),
+  dateOfBirth: z.date().optional(),
+  gender: z.string().optional(),
+  location: z.string().optional(),
+  phone: z.string().optional(),
 });
 
 type SignupInput = z.infer<typeof signupSchema>;
@@ -32,7 +36,7 @@ export async function createUser(values: SignupInput): Promise<FormState> {
     };
   }
 
-  const { fullName, email, password, role, specialization } = validatedFields.data;
+  const { fullName, email, password, role, specialization, dateOfBirth, gender, location, phone } = validatedFields.data;
 
   try {
     // Create user in Firebase Authentication
@@ -49,6 +53,13 @@ export async function createUser(values: SignupInput): Promise<FormState> {
 
     if (role === 'doctor' && specialization) {
       userData.specialization = specialization;
+    }
+
+    if (role === 'patient') {
+      if (dateOfBirth) userData.dateOfBirth = dateOfBirth;
+      if (gender) userData.gender = gender;
+      if (location) userData.location = location;
+      if (phone) userData.phone = phone;
     }
 
     // Create user document in Firestore
