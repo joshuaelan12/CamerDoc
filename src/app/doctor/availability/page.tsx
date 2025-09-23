@@ -68,8 +68,8 @@ export default function DoctorAvailabilityPage() {
           const data = docSnap.data();
           const savedSlots = data.timeSlots.map((slot: { startTime: string }) => {
             const slotDate = new Date(slot.startTime);
-            const hour = slotDate.getHours().toString().padStart(2, '0');
-            const minute = slotDate.getMinutes().toString().padStart(2, '0');
+            const hour = slotDate.getUTCHours().toString().padStart(2, '0');
+            const minute = slotDate.getUTCMinutes().toString().padStart(2, '0');
             return `slot-${hour}-${minute}`;
           });
           setSelectedSlots(savedSlots);
@@ -108,9 +108,10 @@ export default function DoctorAvailabilityPage() {
     
     // Sort selected slots by time
     const sortedSlots = [...selectedSlots].sort((a, b) => {
-      const timeA = timeSlotsOptions.find(opt => opt.id === a)!.time;
-      const timeB = timeSlotsOptions.find(opt => opt.id === b)!.time;
-      return timeA.localeCompare(timeB);
+      const timeA = timeSlotsOptions.find(opt => opt.id === a);
+      const timeB = timeSlotsOptions.find(opt => opt.id === b);
+      if (!timeA || !timeB) return 0;
+      return timeA.time.localeCompare(timeB.time);
     });
 
     const slotsToSave = sortedSlots.map(slotId => {
@@ -119,10 +120,10 @@ export default function DoctorAvailabilityPage() {
         
         const [hour, minute] = option.time.split(':');
         const startTime = new Date(date);
-        startTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
+        startTime.setUTCHours(parseInt(hour), parseInt(minute), 0, 0);
 
         const endTime = new Date(startTime);
-        endTime.setMinutes(startTime.getMinutes() + 30);
+        endTime.setUTCMinutes(startTime.getUTCMinutes() + 30);
 
         return {
             startTime: startTime.toISOString(),

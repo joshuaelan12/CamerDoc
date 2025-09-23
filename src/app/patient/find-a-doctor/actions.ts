@@ -26,7 +26,7 @@ export async function createAppointment(
 
       // 2. Update the doctor's availability
       const availabilityDate = new Date(slot.startTime);
-      availabilityDate.setHours(0, 0, 0, 0); // Normalize to the start of the day
+      availabilityDate.setUTCHours(0, 0, 0, 0); // Normalize to the start of the day in UTC
       const availabilityDocId = `${doctorId}_${availabilityDate.toISOString().split("T")[0]}`;
       const availabilityRef = doc(db, "availabilities", availabilityDocId);
 
@@ -59,5 +59,3 @@ export async function createAppointment(
     };
   }
 }
-
-    

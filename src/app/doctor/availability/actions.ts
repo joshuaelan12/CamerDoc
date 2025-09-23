@@ -17,7 +17,7 @@ export async function saveAvailability(
 ) {
   try {
     const availabilityDate = new Date(date);
-    availabilityDate.setHours(0, 0, 0, 0); // Normalize date to start of day
+    availabilityDate.setUTCHours(0, 0, 0, 0); // Normalize date to start of day in UTC
 
     const docId = `${doctorId}_${availabilityDate.toISOString().split("T")[0]}`;
     const availabilityRef = doc(db, "availabilities", docId);

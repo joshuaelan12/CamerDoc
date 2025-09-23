@@ -51,7 +51,7 @@ export function BookingDialog({ doctor, patient }: { doctor: UserData; patient: 
     setAvailability(null);
     
     const availabilityDate = new Date(selectedDate);
-    availabilityDate.setHours(0, 0, 0, 0); // Normalize date
+    availabilityDate.setUTCHours(0, 0, 0, 0); // Normalize date to UTC
 
     const docId = `${doctor.uid}_${availabilityDate.toISOString().split("T")[0]}`;
     const availabilityRef = doc(db, "availabilities", docId);
@@ -137,7 +137,7 @@ export function BookingDialog({ doctor, patient }: { doctor: UserData; patient: 
                             variant={selectedSlot?.startTime === slot.startTime ? "default" : "outline"}
                             onClick={() => setSelectedSlot(slot)}
                            >
-                               {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                               {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                            </Button>
                        ))}
                     </div>
@@ -154,12 +154,10 @@ export function BookingDialog({ doctor, patient }: { doctor: UserData; patient: 
                 <Button variant="outline">Cancel</Button>
             </DialogClose>
             <Button onClick={handleBooking} disabled={!selectedSlot || isBooking}>
-                {isBooking ? <Loader2 className="animate-spin" /> : `Book for ${selectedSlot ? new Date(selectedSlot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`}
+                {isBooking ? <Loader2 className="animate-spin" /> : `Book for ${selectedSlot ? new Date(selectedSlot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : ''}`}
             </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
-    
