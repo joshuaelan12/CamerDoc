@@ -1,12 +1,15 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { collection, query, where, onSnapshot, doc, getDoc, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { NavItem } from "@/types";
+import type { NavItem, Appointment, UserData } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Calendar,
@@ -17,6 +20,7 @@ import {
   PlusCircle,
   Video,
   Stethoscope,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -29,29 +33,61 @@ const navItems: NavItem[] = [
   { href: "/symptom-checker", label: "Symptom Checker", icon: HeartPulse },
 ];
 
-const upcomingAppointments = [
-    {
-        id: '1',
-        doctorName: 'Dr. John Doe',
-        specialization: 'Cardiology',
-        date: '2024-07-25T14:00:00',
-        type: 'Video Call',
-    }
-];
-
-const pastAppointments = [
-    {
-        id: '2',
-        doctorName: 'Dr. Jane Smith',
-        specialization: 'Dermatology',
-        date: '2024-06-10T10:30:00',
-        type: 'Video Call',
-        status: 'Completed'
-    }
-];
+type EnrichedAppointment = Appointment & {
+  doctor: UserData | null;
+};
 
 export default function PatientAppointmentsPage() {
   const { userData } = useAuth();
+  const [upcomingAppointments, setUpcomingAppointments] = useState<EnrichedAppointment[]>([]);
+  const [pastAppointments, setPastAppointments] = useState<EnrichedAppointment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userData) return;
+
+    const appointmentsQuery = query(
+      collection(db, "appointments"),
+      where("patientId", "==", userData.uid)
+    );
+
+    const unsubscribe = onSnapshot(appointmentsQuery, async (snapshot) => {
+      setLoading(true);
+      const now = new Date();
+      const upcoming: EnrichedAppointment[] = [];
+      const past: EnrichedAppointment[] = [];
+
+      const appointmentPromises = snapshot.docs.map(async (appointmentDoc) => {
+        const appointmentData = { id: appointmentDoc.id, ...appointmentDoc.data() } as Appointment;
+        
+        let doctorData: UserData | null = null;
+        if (appointmentData.doctorId) {
+            const doctorRef = doc(db, "users", appointmentData.doctorId);
+            const doctorSnap = await getDoc(doctorRef);
+            if (doctorSnap.exists()) {
+                doctorData = doctorSnap.data() as UserData;
+            }
+        }
+
+        const enrichedAppointment: EnrichedAppointment = { ...appointmentData, doctor: doctorData };
+
+        if (appointmentData.startTime.toDate() > now) {
+          upcoming.push(enrichedAppointment);
+        } else {
+          past.push(enrichedAppointment);
+        }
+      });
+      
+      await Promise.all(appointmentPromises);
+
+      setUpcomingAppointments(upcoming.sort((a,b) => a.startTime.toMillis() - b.startTime.toMillis()));
+      setPastAppointments(past.sort((a,b) => b.startTime.toMillis() - a.startTime.toMillis()));
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [userData]);
+
 
   return (
     <DashboardLayout navItems={navItems} userName={userData?.fullName || 'Patient'} userRole="Patient">
@@ -72,24 +108,28 @@ export default function PatientAppointmentsPage() {
         </TabsList>
 
         <TabsContent value="upcoming">
-            {upcomingAppointments.length > 0 ? (
+            {loading ? (
+                <div className="flex justify-center items-center h-48">
+                    <Loader2 className="animate-spin text-primary" />
+                </div>
+            ) : upcomingAppointments.length > 0 ? (
                 <div className="grid gap-4 mt-4 md:grid-cols-2">
                     {upcomingAppointments.map((appt) => (
                         <Card key={appt.id}>
                             <CardHeader>
                                 <CardTitle className="flex items-center justify-between">
-                                    <span>{appt.doctorName}</span>
-                                     <Badge variant="secondary">{appt.specialization}</Badge>
+                                    <span>{appt.doctor?.fullName || 'Unknown Doctor'}</span>
+                                     <Badge variant="secondary">{appt.doctor?.specialization || 'N/A'}</Badge>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <p className="flex items-center gap-2 text-muted-foreground">
                                     <Calendar className="h-5 w-5" />
-                                    <span>{new Date(appt.date).toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}</span>
+                                    <span>{appt.startTime.toDate().toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}</span>
                                 </p>
                                  <p className="flex items-center gap-2 text-muted-foreground">
                                     <Video className="h-5 w-5" />
-                                    <span>{appt.type}</span>
+                                    <span>Video Call</span>
                                 </p>
                                 <Button className="w-full">Join Video Call</Button>
                             </CardContent>
@@ -105,21 +145,25 @@ export default function PatientAppointmentsPage() {
             )}
         </TabsContent>
          <TabsContent value="past">
-            {pastAppointments.length > 0 ? (
+             {loading ? (
+                <div className="flex justify-center items-center h-48">
+                    <Loader2 className="animate-spin text-primary" />
+                </div>
+             ) : pastAppointments.length > 0 ? (
                 <div className="grid gap-4 mt-4 md:grid-cols-2">
                     {pastAppointments.map((appt) => (
                         <Card key={appt.id} className="opacity-70">
                             <CardHeader>
                                 <CardTitle className="flex items-center justify-between">
-                                    <span>{appt.doctorName}</span>
+                                    <span>{appt.doctor?.fullName || 'Unknown Doctor'}</span>
                                      <Badge variant="outline">{appt.status}</Badge>
                                 </CardTitle>
-                                 <p className="text-sm text-muted-foreground">{appt.specialization}</p>
+                                 <p className="text-sm text-muted-foreground">{appt.doctor?.specialization || 'N/A'}</p>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                <p className="flex items-center gap-2 text-muted-foreground">
                                     <Calendar className="h-5 w-5" />
-                                    <span>{new Date(appt.date).toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}</span>
+                                    <span>{appt.startTime.toDate().toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })}</span>
                                 </p>
                                <Button variant="outline" className="w-full" disabled>View Consultation Notes</Button>
                             </CardContent>
