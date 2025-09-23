@@ -153,7 +153,7 @@ export default function FindDoctorPage() {
                         <span>{doctor.hospitalAffiliation}</span>
                     </p>
                   }
-                  {userData && <BookingDialog doctor={doctor} patient={userData} />}
+                  <BookingDialog doctor={doctor} patient={userData} />
                 </CardContent>
               </Card>
             ))
@@ -167,5 +167,3 @@ export default function FindDoctorPage() {
     </DashboardLayout>
   );
 }
-
-    

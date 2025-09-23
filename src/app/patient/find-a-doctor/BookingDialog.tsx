@@ -30,7 +30,7 @@ type AvailabilityData = {
   timeSlots: TimeSlot[];
 };
 
-export function BookingDialog({ doctor, patient }: { doctor: UserData; patient: UserData }) {
+export function BookingDialog({ doctor, patient }: { doctor: UserData; patient: UserData | null }) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [availability, setAvailability] = useState<AvailabilityData | null>(null);
@@ -77,7 +77,7 @@ export function BookingDialog({ doctor, patient }: { doctor: UserData; patient: 
 
   const handleBooking = async () => {
       if (!selectedSlot || !patient) {
-          toast({ title: "Error", description: "Please select a time slot.", variant: "destructive" });
+          toast({ title: "Error", description: "Please select a time slot and ensure you are logged in.", variant: "destructive" });
           return;
       }
       setIsBooking(true);
@@ -99,9 +99,9 @@ export function BookingDialog({ doctor, patient }: { doctor: UserData; patient: 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full">
+        <Button className="w-full" disabled={!patient}>
             <CalendarCheck className="mr-2" />
-            View Availability
+            {patient ? "View Availability" : "Login to Book"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
