@@ -18,12 +18,14 @@ import {
   LayoutDashboard,
   Loader2,
   Users,
+  CreditCard,
 } from "lucide-react";
 import type { NavItem } from "@/types";
 
 const navItems: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Manage Users", icon: Users, match: "/admin/users" },
+  { href: "/admin/payments", label: "Payments", icon: CreditCard, match: "/admin/payments" },
   { href: "/admin/settings", label: "System Settings", icon: Cog, match: "/admin/settings" },
   { href: "/admin/analytics", label: "Analytics", icon: AreaChart, match: "/admin/analytics" },
 ];
