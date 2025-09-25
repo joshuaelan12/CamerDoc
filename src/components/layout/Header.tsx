@@ -3,9 +3,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Logo } from "../icons/Logo";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,7 +22,9 @@ const navLinks = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, userData, signOut } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,6 +33,25 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    // If user is logged in and on the homepage, redirect to their dashboard
+    if (userData && pathname === "/") {
+      switch (userData.role) {
+        case "patient":
+          router.replace("/patient/dashboard");
+          break;
+        case "doctor":
+          router.replace("/doctor/dashboard");
+          break;
+        case "admin":
+          router.replace("/admin/dashboard");
+          break;
+        default:
+          break;
+      }
+    }
+  }, [userData, pathname, router]);
 
   return (
     <header
