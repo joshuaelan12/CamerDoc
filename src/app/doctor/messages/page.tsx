@@ -20,12 +20,14 @@ import {
   Send,
   Loader2,
   Newspaper,
+  ArrowLeft,
 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { getConversations, sendMessage } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { cn } from "@/lib/utils";
 
 
 const navItems: NavItem[] = [
@@ -126,12 +128,12 @@ export default function DoctorMessagesPage() {
   return (
     <DashboardLayout navItems={navItems} userName={userData?.fullName || 'Doctor'} userRole="Doctor">
         <h1 className="text-2xl font-bold mb-4 font-headline">My Messages</h1>
-        <Card className="h-[calc(100vh-10rem)] flex">
-           <div className="w-1/3 border-r">
+        <Card className="h-[calc(100vh-10rem)] md:flex overflow-hidden">
+           <div className={cn("md:w-1/3 border-r h-full flex-col", selectedConversation ? "hidden md:flex" : "flex")}>
                 <CardHeader>
                     <CardTitle>Patients</CardTitle>
                 </CardHeader>
-                <ScrollArea className="h-[calc(100%-4rem)]">
+                <ScrollArea className="h-full">
                     <div className="space-y-1 p-2 pt-0">
                        {loadingConversations ? (
                           <div className="flex justify-center items-center h-full p-4">
@@ -165,12 +167,19 @@ export default function DoctorMessagesPage() {
                     </div>
                 </ScrollArea>
            </div>
-           <div className="w-2/3 flex flex-col">
+           <div className={cn("md:w-2/3 flex flex-col h-full", selectedConversation ? "flex" : "hidden md:flex")}>
               {selectedConversation ? (
                 <>
                   <CardHeader className="flex-row items-center justify-between border-b">
-                      <CardTitle className="text-lg">{selectedConversation.fullName}</CardTitle>
-                      <CardDescription>{selectedConversation.email}</CardDescription>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSelectedConversation(null)}>
+                            <ArrowLeft />
+                        </Button>
+                        <div>
+                            <CardTitle className="text-lg">{selectedConversation.fullName}</CardTitle>
+                            <CardDescription>{selectedConversation.email}</CardDescription>
+                        </div>
+                      </div>
                   </CardHeader>
                   <CardContent ref={scrollAreaRef} className="flex-1 p-4 overflow-y-auto">
                       {loadingMessages ? (
@@ -233,5 +242,3 @@ export default function DoctorMessagesPage() {
     </DashboardLayout>
   );
 }
-
-    
