@@ -107,7 +107,7 @@ export default function DoctorPatientsPage() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{patient.email}</TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      {patient.lastAppointment?.toDate().toLocaleDateString() || "N/A"}
+                      {patient.lastAppointment ? new Date(patient.lastAppointment).toLocaleDateString() : "N/A"}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">

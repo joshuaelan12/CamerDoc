@@ -6,7 +6,7 @@ import { collection, query, where, getDocs, Timestamp } from "firebase/firestore
 import type { UserData, Appointment } from "@/types";
 
 export type PatientWithLastAppointment = UserData & {
-  lastAppointment?: Timestamp;
+  lastAppointment?: string; // Changed to string for serialization
 };
 
 // Get all unique patients the doctor has had an appointment with
@@ -52,19 +52,20 @@ export async function getPatientsForDoctor(doctorId: string): Promise<PatientWit
     userSnapshots.forEach(snapshot => {
         snapshot.docs.forEach(doc => {
             const data = doc.data();
+            const lastApptTimestamp = patientAppointmentsMap.get(doc.id);
             const patientData: PatientWithLastAppointment = {
                 ...data,
                 uid: doc.id,
                 createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
                 dateOfBirth: data.dateOfBirth?.toDate ? data.dateOfBirth.toDate().toISOString() : null,
-                lastAppointment: patientAppointmentsMap.get(doc.id),
+                lastAppointment: lastApptTimestamp ? lastApptTimestamp.toDate().toISOString() : undefined,
             } as PatientWithLastAppointment;
             patients.push(patientData);
         });
     });
 
     // Sort patients by most recent appointment
-    patients.sort((a, b) => (b.lastAppointment?.toMillis() || 0) - (a.lastAppointment?.toMillis() || 0));
+    patients.sort((a, b) => (new Date(b.lastAppointment || 0).getTime()) - (new Date(a.lastAppointment || 0).getTime()));
     
     return patients;
 
