@@ -13,10 +13,10 @@ import {
   HeartPulse,
   LayoutDashboard,
   MessageSquare,
-  ScrollText,
   Stethoscope,
   User,
   Newspaper,
+  History,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -25,7 +25,7 @@ const navItems: NavItem[] = [
   { href: "/patient/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/patient/find-a-doctor", label: "Find a Doctor", icon: Stethoscope, match: "/patient/find-a-doctor" },
   { href: "/patient/appointments", label: "Appointments", icon: Calendar, match: "/patient/appointments" },
-  { href: "/patient/history", label: "Medical History", icon: ScrollText, match: "/patient/history" },
+  { href: "/patient/activity", label: "Activity Log", icon: History, match: "/patient/activity" },
   { href: "/patient/news", label: "News & Updates", icon: Newspaper, match: "/patient/news" },
   { href: "/patient/profile", label: "Profile", icon: User, match: "/patient/profile" },
   { href: "/patient/messages", label: "Messages", icon: MessageSquare, match: "/patient/messages" },
@@ -147,7 +147,7 @@ export default function PatientDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Last Checkup</CardTitle>
-            <ScrollText className="h-4 w-4 text-muted-foreground" />
+            <History className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
              {loading ? (

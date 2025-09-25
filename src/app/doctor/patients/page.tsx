@@ -22,6 +22,7 @@ import {
   User,
   Newspaper,
   BookUser,
+  History,
 } from "lucide-react";
 
 const navItems: NavItem[] = [
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
   { href: "/doctor/availability", label: "Availability", icon: CalendarClock, match: "/doctor/availability" },
   { href: "/doctor/patients", label: "Patients", icon: Users, match: "/doctor/patients" },
   { href: "/doctor/news", label: "News & Updates", icon: Newspaper, match: "/doctor/news" },
+  { href: "/doctor/activity", label: "Activity Log", icon: History, match: "/doctor/activity" },
   { href: "/doctor/profile", label: "Profile", icon: User, match: "/doctor/profile" },
   { href: "/doctor/messages", label: "Messages", icon: MessageSquare, match: "/doctor/messages" },
 ];

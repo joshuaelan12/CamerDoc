@@ -46,4 +46,10 @@ export interface Message {
     createdAt: number; // Use number for client-side sorting (milliseconds)
 }
 
+export interface Availability {
+    id: string;
+    doctorId: string;
+    date: Timestamp;
+    timeSlots: { startTime: string; endTime: string }[];
+}
     
